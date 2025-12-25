@@ -5,11 +5,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.Utils.SD_Button1_Command;
 import frc.robot.Utils.StreamDeckNT;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 import java.io.File;
@@ -57,8 +54,6 @@ public class RobotContainer {
     controller.cross().onTrue(Commands.runOnce(drivebase::zeroGyro));
     controller.L1().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 
-     new Trigger(streamDeck::b1)
-    .onTrue(new SD_Button1_Command());
   }
 
   public Command getAutonomousCommand() {
