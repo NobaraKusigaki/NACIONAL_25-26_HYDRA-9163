@@ -23,25 +23,24 @@
 
   .status-ok {
     background: #1f7a1f;
-    color: #d7ffd7;
+    color: #eaffea;
   }
   
   .status-medium {
-    background: #7a5c1f;
-    color: #fff2d7;
+    background: #f1c40f; 
+    color: #000;
   }
   
   .status-high {
-    background: #7a2f1f;
-    color: #ffe2d7;
+    background: #e74c3c; 
+    color: #fff;
   }
   
   .status-critical {
-    background: #8b0000;
-    color: #ffd7d7;
+    background: #ff0000; 
+    color: #fff;
   }
 
-  
   .metric {
     display: flex;
     justify-content: space-between;
