@@ -8,7 +8,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class FirstSequentialScore extends SubsystemBase {
   /** Creates a new FirstSequentialScore. */
-  public FirstSequentialScore() {}
+  public FirstSequentialScore() {
+   
+  }
 
   @Override
   public void periodic() {
