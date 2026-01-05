@@ -72,30 +72,46 @@
     border-radius: 6px;
   }
 
-  /* ============================= */
+/* ============================= */
+/* DASHBOARD ROOT */
+/* ============================= */
+
+#dashboard-root {
+  display: grid;
+  grid-template-columns: 1fr; /* uma coluna só */
+  grid-template-areas:
+    "stress";
+  width: 100%;
+}
+
+/* ============================= */
 /* LIMELIGHT DASHBOARD */
 /* ============================= */
 
 #limelight-main {
-    grid-area: stress;
-  }
-  
-  .limelight-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    flex: 1;
-  }
-  
-  .camera-box {
-    background: #000;
-    border: 2px solid #333;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #777;
-    font-size: 1.2rem;
-  }
-  
-  
+  grid-area: stress;
+  width: 100%;
+}
+
+.limelight-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* um embaixo do outro */
+  gap: 12px;
+  width: 100%;
+}
+
+.camera-box {
+  background: #000;
+  border: 2px solid #333;
+  border-radius: 8px;
+
+  width: 100%;
+  height: 280px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #777;
+  font-size: 1.2rem;
+}
