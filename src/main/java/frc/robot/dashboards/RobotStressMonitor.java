@@ -54,4 +54,22 @@ public class RobotStressMonitor {
         if (score < 75) return "HIGH";
         return "CRITICAL";
     }
+
+    public RobotStressData generateData(int[] drivetrainChannels) {
+        double voltage = getBatteryVoltage();
+        double totalCurrent = getTotalCurrent();
+        double drivetrainCurrent = getDrivetrainCurrent(drivetrainChannels);
+    
+        double score = calculateStressScore(drivetrainCurrent);
+        String level = getStressLevel(score);
+    
+        return new RobotStressData(
+                voltage,
+                totalCurrent,
+                drivetrainCurrent,
+                score,
+                level
+        );
+    }
+    
 }
