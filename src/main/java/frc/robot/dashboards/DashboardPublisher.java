@@ -12,17 +12,12 @@ public class DashboardPublisher {
                 .getTable("RobotStress");
     }
 
-    public void publish(
-            double voltage,
-            double totalCurrent,
-            double drivetrainCurrent,
-            double stressScore,
-            String stressLevel
-    ) {
-        stressTable.getEntry("batteryVoltage").setDouble(voltage);
-        stressTable.getEntry("totalCurrent").setDouble(totalCurrent);
-        stressTable.getEntry("drivetrainCurrent").setDouble(drivetrainCurrent);
-        stressTable.getEntry("stressScore").setDouble(stressScore);
-        stressTable.getEntry("stressLevel").setString(stressLevel);
+    public void publish(RobotStressData data) {
+        stressTable.getEntry("batteryVoltage").setDouble(data.batteryVoltage);
+        stressTable.getEntry("totalCurrent").setDouble(data.totalCurrent);
+        stressTable.getEntry("drivetrainCurrent").setDouble(data.drivetrainCurrent);
+        stressTable.getEntry("stressScore").setDouble(data.stressScore);
+        stressTable.getEntry("stressLevel").setString(data.stressLevel);
     }
+    
 }
