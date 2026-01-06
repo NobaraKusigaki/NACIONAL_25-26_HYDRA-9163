@@ -6,6 +6,8 @@ package frc.robot;
 
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -39,6 +41,10 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("Robot/LoopTimeSec", edu.wpi.first.wpilibj.Timer.getFPGATimestamp() );
     
     robotContainer.updateDashboards();
+     
+    NetworkTableInstance.getDefault()
+        .getEntry("/RobotStress/TEST")
+        .setDouble(Math.random() * 100);
   }
 
  

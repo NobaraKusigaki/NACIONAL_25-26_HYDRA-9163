@@ -1,8 +1,11 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -14,6 +17,7 @@ import frc.robot.dashboards.RobotStressMonitor;
 import frc.robot.dashboards.DashboardPublisher;
 import frc.robot.dashboards.RobotStressController;
 import frc.robot.dashboards.RobotStressData;
+import edu.wpi.first.networktables.NetworkTableInstance;
 
 import java.io.File;
 
@@ -77,6 +81,22 @@ public class RobotContainer {
         speedScale,
         Math.abs(chassisSpeed)
     );
+
+    NetworkTableInstance.getDefault()
+  .getTable("RobotStress")
+  .getEntry("batteryVoltage")
+  .setDouble(RobotController.getBatteryVoltage());
+
+NetworkTableInstance.getDefault()
+  .getTable("RobotStress")
+  .getEntry("stressLevel")
+  .setString("LOW");
+
+NetworkTableInstance.getDefault()
+  .getTable("RobotStress")
+  .getEntry("speedScale")
+  .setDouble(0.8);
+
 }
 
 
