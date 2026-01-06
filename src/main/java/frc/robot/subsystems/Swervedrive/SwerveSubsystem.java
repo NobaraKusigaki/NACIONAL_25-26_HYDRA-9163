@@ -31,7 +31,6 @@ import swervelib.SwerveDrive;
 import swervelib.parser.SwerveControllerConfiguration;
 import swervelib.parser.SwerveDriveConfiguration;
 import swervelib.parser.SwerveParser;
-import org.littletonrobotics.junction.Logger;
 
 public class SwerveSubsystem extends SubsystemBase {
 
@@ -66,9 +65,8 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public SwerveSubsystem(
-      SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg) {
-    swerveDrive =
-        new SwerveDrive(
+    SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg) {
+    swerveDrive = new SwerveDrive(
             driveCfg,
             controllerCfg,
             Constants.MAX_SPEED,
@@ -76,32 +74,7 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {
-    super.periodic();
-  
-    Pose2d pose = swerveDrive.getPose();
-  
-    Logger.recordOutput("Swerve/Pose", pose);
-    Logger.recordOutput("Field/Robot", pose);
-  
-    Logger.recordOutput("Swerve/ChassisSpeeds", swerveDrive.getRobotVelocity());
-    Logger.recordOutput("Swerve/FieldSpeeds", swerveDrive.getFieldVelocity());
-
-    Logger.recordOutput("Swerve/Gyro/YawDeg", getHeading().getDegrees());
-    Logger.recordOutput("Swerve/Gyro/PitchDeg", getPitch().getDegrees());
-    Logger.recordOutput("Swerve/Gyro/RollDeg", getRoll().getDegrees());
-  
-    var modules = swerveDrive.getModules();
-    for (int i = 0; i < modules.length; i++) {
-      Logger.recordOutput(
-          "Swerve/Modules/" + i + "/AngleDeg",
-          modules[i].getState().angle.getDegrees());
-  
-      Logger.recordOutput(
-          "Swerve/Modules/" + i + "/SpeedMPS",
-          modules[i].getState().speedMetersPerSecond);
-    }
-  }
+  public void periodic() {}
 
   public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
 
