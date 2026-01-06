@@ -29,10 +29,9 @@ public class RobotStressMonitor {
 
     private double batteryStress(double voltage) {
         if (voltage >= 11.0) return 0;
-        if (voltage >= 10.0) return 10;
-        if (voltage >= 9.0)  return 30;
-        if (voltage >= 8.0)  return 60;
-        if (voltage >= 7.5)  return 85;
+        if (voltage >= 10.0) return 30;
+        if (voltage >= 9.0)  return 70;
+        if (voltage >= 8.0)  return 90;
         return 100;
     }
 
@@ -49,11 +48,12 @@ public class RobotStressMonitor {
     }
 
     public String getStressLevel(double score) {
-        if (score < 25) return "LOW";
-        if (score < 50) return "MEDIUM";
-        if (score < 75) return "HIGH";
+        if (score < 20) return "LOW";
+        if (score < 45) return "MEDIUM";
+        if (score < 70) return "HIGH";
         return "CRITICAL";
     }
+    
 
     public RobotStressData generateData(int[] drivetrainChannels) {
         double voltage = getBatteryVoltage();
