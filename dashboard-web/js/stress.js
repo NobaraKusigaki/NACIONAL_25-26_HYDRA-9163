@@ -1,84 +1,80 @@
-const ntSocket = new WebSocket("ws://localhost:5810");
+// NT4 direto do robô (igual AdvantageScope)
+const socket = new WebSocket("ws://localhost:5805/nt/dashboard");
 
-let ntData = {};
-
-ntSocket.onopen = () => {
-  console.log("[NT] Conectado ao robô");
+socket.onopen = () => {
+  console.log("🟢 Conectado ao robô (NT3)");
 };
 
-ntSocket.onmessage = (event) => {
+socket.onmessage = event => {
   const msg = JSON.parse(event.data);
-  if (!msg.key) return;
+  console.log("RAW NT:", msg);
+// msg = { topic, value }
+if (!msg.topic || msg.value === undefined) return;
 
-  ntData[msg.key] = msg.value;
-  updateStressDashboard();
+  console.log("📡", msg.topic, msg.value);
+
+  updateValue(msg.topic, msg.value);
 };
 
-ntSocket.onerror = () => {
-  console.warn("[NT] Erro na conexão NT");
+socket.onerror = err => {
+  console.error("❌ Erro NT", err);
 };
 
-function updateStressDashboard() {
-  const voltage = ntData["/RobotStress/batteryVoltage"];
-  const totalCurrent = ntData["/RobotStress/totalCurrent"];
-  const drivetrainCurrent = ntData["/RobotStress/drivetrainCurrent"];
-  const stressScore = ntData["/RobotStress/stressScore"];
-  const stressLevel = ntData["/RobotStress/stressLevel"];
-  const speedScale = ntData["/RobotStress/speedScale"];
-  const chassisSpeed = ntData["/RobotStress/chassisSpeed"];
+socket.onclose = () => {
+  console.warn("🔴 NT desconectado");
+};
 
-  if (voltage !== undefined)
-    document.getElementById("battery-voltage").textContent =
-      voltage.toFixed(2) + " V";
+// ==========================
+// Atualização da dashboard
+// ==========================
+function updateValue(topic, value) {
+  switch (topic) {
 
-  if (totalCurrent !== undefined)
-    document.getElementById("total-current").textContent =
-      totalCurrent.toFixed(1) + " A";
+    case "/RobotStress/batteryVoltage":
+      set("battery-voltage", value, " V", 2);
+      break;
 
-  if (drivetrainCurrent !== undefined)
-    document.getElementById("drivetrain-current").textContent =
-      drivetrainCurrent.toFixed(1) + " A";
+    case "/RobotStress/totalCurrent":
+      set("total-current", value, " A", 1);
+      break;
 
-  if (stressScore !== undefined)
-    document.getElementById("stress-score").textContent =
-      stressScore.toFixed(0);
+    case "/RobotStress/drivetrainCurrent":
+      set("drivetrain-current", value, " A", 1);
+      break;
 
-  if (speedScale !== undefined)
-    document.getElementById("speed-scale").textContent =
-      Math.round(speedScale * 100) + "%";
+    case "/RobotStress/stressScore":
+      set("stress-score", value, "", 0);
+      break;
 
-  if (chassisSpeed !== undefined)
-    document.getElementById("chassis-speed").textContent =
-      chassisSpeed.toFixed(2) + " m/s";
+    case "/RobotStress/stressLevel":
+      updateStressStatus(value);
+      break;
 
-  if (stressLevel !== undefined)
-    updateStressStatus(stressLevel);
+    case "/RobotStress/speedScale":
+      document.getElementById("speed-scale").innerText =
+        Math.round(value * 100) + "%";
+      break;
+
+    case "/RobotStress/chassisSpeed":
+      document.getElementById("chassis-speed").innerText =
+        value.toFixed(2) + " m/s";
+      break;
+  }
+}
+
+function set(id, value, suffix, decimals) {
+  document.getElementById(id).innerText =
+    value.toFixed(decimals) + suffix;
 }
 
 function updateStressStatus(level) {
-  const statusBox = document.getElementById("stress-status");
+  const box = document.getElementById("stress-status");
 
-  statusBox.textContent = level;
+  box.textContent = level;
+  box.className = "";
 
-  statusBox.classList.remove(
-    "status-ok",
-    "status-medium",
-    "status-high",
-    "status-critical"
-  );
-
-  switch (level) {
-    case "LOW":
-      statusBox.classList.add("status-ok");
-      break;
-    case "MEDIUM":
-      statusBox.classList.add("status-medium");
-      break;
-    case "HIGH":
-      statusBox.classList.add("status-high");
-      break;
-    case "CRITICAL":
-      statusBox.classList.add("status-critical");
-      break;
-  }
+  if (level === "LOW") box.classList.add("status-ok");
+  if (level === "MEDIUM") box.classList.add("status-medium");
+  if (level === "HIGH") box.classList.add("status-high");
+  if (level === "CRITICAL") box.classList.add("status-critical");
 }
