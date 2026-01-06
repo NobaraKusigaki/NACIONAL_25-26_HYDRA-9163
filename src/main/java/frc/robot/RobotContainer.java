@@ -12,6 +12,7 @@ import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 import frc.robot.Utils.StreamDeckNT;
 import frc.robot.dashboards.RobotStressMonitor;
 import frc.robot.dashboards.DashboardPublisher;
+import frc.robot.dashboards.RobotStressController;
 import frc.robot.dashboards.RobotStressData;
 
 import java.io.File;
@@ -22,26 +23,25 @@ public class RobotContainer {
 
   private final CommandPS5Controller controller = new CommandPS5Controller(0);
   private final StreamDeckNT streamDeck = new StreamDeckNT();
+  private final RobotStressController stressController = new RobotStressController();
 
   private final SwerveSubsystem drivebase =
       new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
 
-  // ===== DASHBOARDS =====
-  private final RobotStressMonitor stressMonitor = new RobotStressMonitor(1); // PDH ID
+  private final RobotStressMonitor stressMonitor = new RobotStressMonitor(30); 
   private final DashboardPublisher dashboardPublisher = new DashboardPublisher();
 
-  // Ajustar para os canais reais do drivetrain
-  private final int[] drivetrainPDHChannels = {0, 1, 2, 3};
+  private final int[] drivetrainPDHChannels = {0, 2, 3, 6, 10, 14, 15, 19};
 
   SwerveInputStream driveAngularVelocity =
-      SwerveInputStream.of(
-              drivebase.getSwerveDrive(),
-              () -> controller.getLeftY() * -1,
-              () -> controller.getLeftX() * -1)
-          .withControllerRotationAxis(controller::getRightX)
-          .deadband(OperatorConstants.DEADBAND)
-          .scaleTranslation(0.8)
-          .allianceRelativeControl(true);
+    SwerveInputStream.of(
+            drivebase.getSwerveDrive(),
+            () -> controller.getLeftY() * -1 * stressController.getSpeedScale(),
+            () -> controller.getLeftX() * -1 * stressController.getSpeedScale())
+            .withControllerRotationAxis(() -> controller.getRightX() * stressController.getSpeedScale())
+        .deadband(OperatorConstants.DEADBAND)
+        .scaleTranslation(0.8)
+        .allianceRelativeControl(true);
 
   SwerveInputStream driveDirectAngle =
       driveAngularVelocity
@@ -68,11 +68,18 @@ public class RobotContainer {
   }
 
   public void updateDashboards() {
-    RobotStressData stressData =
-        stressMonitor.generateData(drivetrainPDHChannels);
+    RobotStressData stressData = stressMonitor.generateData(drivetrainPDHChannels);
+    double speedScale = stressController.getSpeedScale();
+    double chassisSpeed = drivebase.getRobotVelocity().vxMetersPerSecond;
 
-    dashboardPublisher.publish(stressData);
-  }
+    dashboardPublisher.publish(
+        stressData,
+        speedScale,
+        Math.abs(chassisSpeed)
+    );
+}
+
+
 
   public Command getAutonomousCommand() {
     return drivebase.getAutonomousCommand("AutoSimple");
