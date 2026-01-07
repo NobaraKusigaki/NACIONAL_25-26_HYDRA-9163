@@ -28,6 +28,7 @@ import swervelib.SwerveInputStream;
 public class RobotContainer {
 
   private final CommandPS5Controller controller = new CommandPS5Controller(0);
+  @SuppressWarnings("unused")
   private final StreamDeckNT streamDeck = new StreamDeckNT();
   private final RobotStressController stressController = new RobotStressController();
   private double driveSpeedScale = 1.0;
