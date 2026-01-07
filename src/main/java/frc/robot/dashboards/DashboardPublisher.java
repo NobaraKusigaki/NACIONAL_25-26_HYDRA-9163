@@ -8,6 +8,7 @@ public class DashboardPublisher {
     private final NetworkTable stressTable =
             NetworkTableInstance.getDefault().getTable("RobotStress");
 
+    private final RobotStressController stressController = new RobotStressController();
     public void publish(RobotStressData data, double speedScale, double chassisSpeed) {
 
         stressTable.getEntry("batteryVoltage").setDouble(data.batteryVoltage);
@@ -19,5 +20,7 @@ public class DashboardPublisher {
 
         stressTable.getEntry("speedScale").setDouble(speedScale);
         stressTable.getEntry("chassisSpeed").setDouble(chassisSpeed);
+
+        //stressTable.getEntry("voltageLimited").setBoolean(stressController.isVoltageLimited());
     }
 }

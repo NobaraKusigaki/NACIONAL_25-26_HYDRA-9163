@@ -1,19 +1,10 @@
-// NT4 direto do robô (igual AdvantageScope)
-const socket = new WebSocket("ws://localhost:5805/nt/dashboard");
+const wsUrl = "ws://localhost:5805/nt/dashboard";
+const socket = new WebSocket(wsUrl);
+
+let nt = {};
 
 socket.onopen = () => {
   console.log("🟢 Conectado ao robô (NT3)");
-};
-
-socket.onmessage = event => {
-  const msg = JSON.parse(event.data);
-  console.log("RAW NT:", msg);
-// msg = { topic, value }
-if (!msg.topic || msg.value === undefined) return;
-
-  console.log("📡", msg.topic, msg.value);
-
-  updateValue(msg.topic, msg.value);
 };
 
 socket.onerror = err => {
@@ -24,47 +15,44 @@ socket.onclose = () => {
   console.warn("🔴 NT desconectado");
 };
 
-// ==========================
-// Atualização da dashboard
-// ==========================
-function updateValue(topic, value) {
-  switch (topic) {
+socket.onmessage = event => {
+  const msg = JSON.parse(event.data);
 
-    case "/RobotStress/batteryVoltage":
-      set("battery-voltage", value, " V", 2);
-      break;
+  // esperado: { topic, value }
+  if (!msg.topic) return;
 
-    case "/RobotStress/totalCurrent":
-      set("total-current", value, " A", 1);
-      break;
+  nt[msg.topic] = msg.value;
+  updateDashboard();
+};
 
-    case "/RobotStress/drivetrainCurrent":
-      set("drivetrain-current", value, " A", 1);
-      break;
+function updateDashboard() {
 
-    case "/RobotStress/stressScore":
-      set("stress-score", value, "", 0);
-      break;
+  setNum("/RobotStress/batteryVoltage", "battery-voltage", " V", 2);
+  setNum("/RobotStress/totalCurrent", "total-current", " A", 1);
+  setNum("/RobotStress/drivetrainCurrent", "drivetrain-current", " A", 1);
+  setNum("/RobotStress/stressScore", "stress-score", "", 0);
 
-    case "/RobotStress/stressLevel":
-      updateStressStatus(value);
-      break;
-
-    case "/RobotStress/speedScale":
-      document.getElementById("speed-scale").innerText =
-        Math.round(value * 100) + "%";
-      break;
-
-    case "/RobotStress/chassisSpeed":
-      document.getElementById("chassis-speed").innerText =
-        value.toFixed(2) + " m/s";
-      break;
+  if (nt["/RobotStress/chassisSpeed"] !== undefined) {
+    document.getElementById("chassis-speed").innerText =
+      nt["/RobotStress/chassisSpeed"].toFixed(2) + " m/s";
   }
+
+  if (nt["/RobotStress/speedScale"] !== undefined) {
+    document.getElementById("speed-scale").innerText =
+      Math.round(nt["/RobotStress/speedScale"] * 100) + "%";
+  }
+
+  if (nt["/RobotStress/stressLevel"]) {
+    updateStressStatus(nt["/RobotStress/stressLevel"]);
+  }
+
+  handleBatterySpeedWarning();
 }
 
-function set(id, value, suffix, decimals) {
+function setNum(topic, id, suffix, decimals) {
+  if (nt[topic] === undefined) return;
   document.getElementById(id).innerText =
-    value.toFixed(decimals) + suffix;
+    nt[topic].toFixed(decimals) + suffix;
 }
 
 function updateStressStatus(level) {
@@ -77,4 +65,23 @@ function updateStressStatus(level) {
   if (level === "MEDIUM") box.classList.add("status-medium");
   if (level === "HIGH") box.classList.add("status-high");
   if (level === "CRITICAL") box.classList.add("status-critical");
+}
+
+function handleBatterySpeedWarning() {
+
+  const voltage = nt["/RobotStress/batteryVoltage"];
+  const speedScale = nt["/RobotStress/speedScale"];
+
+  const warning = document.getElementById("speed-warning");
+
+  if (voltage === undefined || speedScale === undefined) {
+    warning.classList.add("hidden");
+    return;
+  }
+
+  if (voltage < 11.0 && speedScale < 1.0) {
+    warning.classList.remove("hidden");
+  } else {
+    warning.classList.add("hidden");
+  }
 }
