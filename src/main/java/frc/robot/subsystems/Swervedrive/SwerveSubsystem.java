@@ -9,23 +9,29 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
+
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+
 import frc.robot.Constants;
 import frc.robot.Utils.DriveUtils.AntiTipController;
 import frc.robot.Utils.DriveUtils.SlewLimiter;
 
 import java.io.File;
+
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.parser.SwerveControllerConfiguration;
@@ -34,6 +40,13 @@ import swervelib.parser.SwerveParser;
 
 public class SwerveSubsystem extends SubsystemBase {
 
+
+  private static final Pose2d BLUE_START_POSE =
+      new Pose2d(new Translation2d(Meter.of(1), Meter.of(4)), Rotation2d.fromDegrees(0));
+
+  private static final Pose2d RED_START_POSE =
+      new Pose2d(new Translation2d(Meter.of(16), Meter.of(4)), Rotation2d.fromDegrees(180));
+
   private final SwerveDrive swerveDrive;
   private final AntiTipController antiTip = new AntiTipController();
 
@@ -41,11 +54,16 @@ public class SwerveSubsystem extends SubsystemBase {
   private final SlewLimiter yLimiter = new SlewLimiter(3.5, Constants.LOOP_TIME);
   private final SlewLimiter rotLimiter = new SlewLimiter(6.0, Constants.LOOP_TIME);
 
-  private static final Pose2d BLUE_START_POSE =
-      new Pose2d(new Translation2d(Meter.of(1), Meter.of(4)), Rotation2d.fromDegrees(0));
+  private final ProfiledPIDController headingPID =
+      new ProfiledPIDController(
+          5.5,   
+          0.0,   
+          0.2,   
+          new TrapezoidProfile.Constraints(
+              Units.degreesToRadians(90),
+              Units.degreesToRadians(180))
+      );
 
-  private static final Pose2d RED_START_POSE =
-      new Pose2d(new Translation2d(Meter.of(16), Meter.of(4)), Rotation2d.fromDegrees(180));
 
   public SwerveSubsystem(File directory) {
     try {
@@ -60,17 +78,24 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
     swerveDrive.setModuleEncoderAutoSynchronize(true, 1);
 
+    headingPID.enableContinuousInput(-Math.PI, Math.PI);
+
     setupPathPlanner();
     RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroWithAlliance));
   }
 
   public SwerveSubsystem(
-    SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg) {
-    swerveDrive = new SwerveDrive(
+      SwerveDriveConfiguration driveCfg,
+      SwerveControllerConfiguration controllerCfg) {
+
+    swerveDrive =
+        new SwerveDrive(
             driveCfg,
             controllerCfg,
             Constants.MAX_SPEED,
             new Pose2d(new Translation2d(Meter.of(2), Meter.of(0)), Rotation2d.fromDegrees(0)));
+
+    headingPID.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   @Override
@@ -91,6 +116,10 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.drive(limited, rot, fieldRelative, false);
   }
 
+  public void drive(ChassisSpeeds velocity) {
+    swerveDrive.drive(velocity);
+  }
+
   public void driveFieldOriented(ChassisSpeeds velocity) {
     swerveDrive.driveFieldOriented(velocity);
   }
@@ -99,9 +128,60 @@ public class SwerveSubsystem extends SubsystemBase {
     return run(() -> swerveDrive.driveFieldOriented(velocity.get()));
   }
 
-  public void drive(ChassisSpeeds velocity) {
-    swerveDrive.drive(velocity);
+  public Command snapToAngle(Rotation2d targetAngle,java.util.function.Supplier<Translation2d> translationSupplier) {
+
+    return run(() -> {
+          Rotation2d current = getHeading();
+
+          double rotOutput =
+              headingPID.calculate(
+                  current.getRadians(),
+                  targetAngle.getRadians()
+              );
+
+          Translation2d translation = translationSupplier.get();
+
+          swerveDrive.drive(
+              translation,
+              rotOutput,
+              true,
+              false
+          );
+        })
+        .beforeStarting(() -> headingPID.reset(getHeading().getRadians()))
+        .withName("SnapToAngle_" + targetAngle.getDegrees());
   }
+  public Command snapToAngleOnce(
+    Rotation2d targetAngle,
+    java.util.function.Supplier<Translation2d> translationSupplier) {
+
+  return run(() -> {
+        Rotation2d current = getHeading();
+
+        double rotOutput =
+            headingPID.calculate(
+                current.getRadians(),
+                targetAngle.getRadians()
+            );
+
+        Translation2d translation = translationSupplier.get();
+
+        swerveDrive.drive(
+            translation,
+            rotOutput,
+            true,
+            false
+        );
+      })
+      .beforeStarting(() -> headingPID.reset(getHeading().getRadians()))
+      .until(() -> 
+          Math.abs(
+              getHeading().minus(targetAngle).getDegrees()
+          ) < 2.0   // tolerância em graus
+      )
+      .withName("SnapToAngleOnce_" + targetAngle.getDegrees());
+}
+
 
   private void setupPathPlanner() {
     try {
@@ -113,7 +193,8 @@ public class SwerveSubsystem extends SubsystemBase {
           this::getRobotVelocity,
           swerveDrive::setChassisSpeeds,
           new PPHolonomicDriveController(
-              new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+              new PIDConstants(5.0, 0.0, 0.0),
+              new PIDConstants(5.0, 0.0, 0.0)),
           config,
           () ->
               DriverStation.getAlliance().isPresent()
@@ -140,9 +221,10 @@ public class SwerveSubsystem extends SubsystemBase {
             Units.degreesToRadians(720));
 
     return AutoBuilder.pathfindToPose(
-        pose, constraints, edu.wpi.first.units.Units.MetersPerSecond.of(0));
+        pose,
+        constraints,
+        edu.wpi.first.units.Units.MetersPerSecond.of(0));
   }
-
 
   public void resetOdometry(Pose2d pose) {
     swerveDrive.resetOdometry(pose);
@@ -155,12 +237,6 @@ public class SwerveSubsystem extends SubsystemBase {
   public ChassisSpeeds getRobotVelocity() {
     return swerveDrive.getRobotVelocity();
   }
-
-  public double getChassisSpeedMPS() {
-    var speeds = swerveDrive.getRobotVelocity();
-    return Math.hypot(speeds.vxMetersPerSecond,
-                      speeds.vyMetersPerSecond);
-}
 
   public ChassisSpeeds getFieldVelocity() {
     return swerveDrive.getFieldVelocity();
@@ -187,12 +263,9 @@ public class SwerveSubsystem extends SubsystemBase {
     resetOdometry(getStartingPoseForAlliance());
   }
 
-  public void setMotorBrake(boolean brake) {
-    swerveDrive.setMotorIdleMode(brake);
-  }
-
-  public void lock() {
-    swerveDrive.lockPose();
+  public double getChassisSpeedMPS() {
+    var speeds = swerveDrive.getRobotVelocity();
+    return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
   }
 
   public Rotation2d getPitch() {
@@ -201,6 +274,14 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public Rotation2d getRoll() {
     return swerveDrive.getRoll();
+  }
+
+  public void setMotorBrake(boolean brake) {
+    swerveDrive.setMotorIdleMode(brake);
+  }
+
+  public void lock() {
+    swerveDrive.lockPose();
   }
 
   public void replaceSwerveModuleFeedforward(double kS, double kV, double kA) {
