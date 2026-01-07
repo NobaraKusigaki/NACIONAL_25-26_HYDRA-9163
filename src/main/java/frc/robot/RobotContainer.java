@@ -2,8 +2,6 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -11,7 +9,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 import frc.robot.Utils.StreamDeckNT;
@@ -19,7 +17,6 @@ import frc.robot.dashboards.RobotStressMonitor;
 import frc.robot.dashboards.DashboardPublisher;
 import frc.robot.dashboards.RobotStressController;
 import frc.robot.dashboards.RobotStressData;
-import edu.wpi.first.networktables.NetworkTableInstance;
 
 import java.io.File;
 
@@ -31,7 +28,6 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   private final StreamDeckNT streamDeck = new StreamDeckNT();
   private final RobotStressController stressController = new RobotStressController();
-  private double driveSpeedScale = 1.0;
 
   private final SwerveSubsystem drivebase =
       new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
@@ -43,15 +39,12 @@ public class RobotContainer {
 
   SwerveInputStream driveAngularVelocity =
     SwerveInputStream.of(
-        drivebase.getSwerveDrive(),
-        () -> -controller.getLeftY(),
-        () -> -controller.getLeftX()
-    )
-    .withControllerRotationAxis(() -> controller.getRightX())
-    .deadband(OperatorConstants.DEADBAND)
-    .scaleTranslation(driveSpeedScale)
-    .allianceRelativeControl(true);
-
+            drivebase.getSwerveDrive(),
+            () -> -controller.getLeftY() * stressController.getSpeedScale(),
+            () -> -controller.getLeftX() * stressController.getSpeedScale())
+            .withControllerRotationAxis(() -> controller.getRightX() * stressController.getSpeedScale())
+        .deadband(OperatorConstants.DEADBAND)
+        .scaleTranslation(0.8)        .allianceRelativeControl(true);
 
   SwerveInputStream driveDirectAngle =
       driveAngularVelocity
@@ -63,6 +56,8 @@ public class RobotContainer {
     configureBindings();
 
     DriverStation.silenceJoystickConnectionWarning(true);
+
+    
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
   }
 
@@ -71,49 +66,43 @@ public class RobotContainer {
         drivebase.driveFieldOriented(driveDirectAngle);
 
     drivebase.setDefaultCommand(driveFieldOrientedDirectAngle);
-    // controller.cross().onTrue(Commands.runOnce(drivebase::zeroGyro));
-   
-    controller.triangle().onTrue(
-    drivebase.snapToAngleOnce(
-        Rotation2d.fromDegrees(0),
-        () -> new Translation2d()));
 
-      controller.circle().onTrue(
-      drivebase.snapToAngleOnce(
-          Rotation2d.fromDegrees(90),
-          () -> new Translation2d()));
-
-       controller.cross().onTrue(
-       drivebase.snapToAngleOnce(
-         Rotation2d.fromDegrees(180),
-         () -> new Translation2d()));
-
-         controller.square().onTrue(
-          drivebase.snapToAngleOnce(
-              Rotation2d.fromDegrees(270),
-              () -> new Translation2d()));   
-
+    controller.cross().onTrue(Commands.runOnce(drivebase::zeroGyro));
   }
 
   public void updateDashboards() {
-
-    RobotStressData stressData =
-        stressMonitor.generateData(drivetrainPDHChannels);
-        stressController.update(stressData);
-
-    driveSpeedScale = stressController.getMaxAllowedSpeedMps() / Constants.MAX_SPEED;
-    double chassisSpeed =drivebase.getRobotVelocity().vxMetersPerSecond;
+    RobotStressData stressData = stressMonitor.generateData(drivetrainPDHChannels);
+    double speedScale = stressController.getSpeedScale();
+    double chassisSpeed = drivebase.getRobotVelocity().vxMetersPerSecond;
 
     dashboardPublisher.publish(
         stressData,
-        driveSpeedScale,
+        speedScale,
         Math.abs(chassisSpeed)
     );
+
+    NetworkTableInstance.getDefault()
+  .getTable("RobotStress")
+  .getEntry("batteryVoltage")
+  .setDouble(RobotController.getBatteryVoltage());
+
+NetworkTableInstance.getDefault()
+  .getTable("RobotStress")
+  .getEntry("stressLevel")
+  .setString("LOW");
+
+NetworkTableInstance.getDefault()
+  .getTable("RobotStress")
+  .getEntry("speedScale")
+  .setDouble(0.8);
+
 }
 
-public Command getAutonomousCommand() {
-  return drivebase.getAutonomousCommand("AutoSimple");
-}
+
+
+  public Command getAutonomousCommand() {
+    return drivebase.getAutonomousCommand("AutoSimple");
+  }
 
   public void setMotorBrake(boolean brake) {
     drivebase.setMotorBrake(brake);
