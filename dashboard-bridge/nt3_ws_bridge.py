@@ -1,17 +1,4 @@
-#!/usr/bin/env python3
-"""
-Bridge NT3 (pynetworktables) -> WebSocket (browser).
-Uso:
-  python nt3_ws_bridge.py --roborio 10.91.63.2 --port 5810
 
-Funcionalidades:
-- Conecta ao roboRIO via pynetworktables (NT3).
-- Lê periodicamente chaves configuradas na tabela RobotStress e envia updates
-  para todos os clientes WebSocket conectados no formato:
-    { "topic": "/RobotStress/<key>", "value": <valor> }
-- Aceita mensagens do browser para escrever no roboRIO:
-    { "action": "put", "table": "RobotStress", "key": "<key>", "value": <valor> }
-"""
 import asyncio
 import json
 import argparse
