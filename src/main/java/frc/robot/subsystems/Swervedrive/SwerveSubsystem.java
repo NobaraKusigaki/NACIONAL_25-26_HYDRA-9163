@@ -8,26 +8,16 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
+import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.networktables.StructPublisher;
-
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.networktables.*;
+import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
 import frc.robot.Constants;
@@ -36,14 +26,13 @@ import frc.robot.Utils.DriveUtils.SlewLimiter;
 
 import java.io.File;
 
-import swervelib.SwerveController;
-import swervelib.SwerveDrive;
-import swervelib.parser.SwerveControllerConfiguration;
-import swervelib.parser.SwerveDriveConfiguration;
+import org.littletonrobotics.junction.Logger;
+
+import swervelib.*;
 import swervelib.parser.SwerveParser;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public class SwerveSubsystem extends SubsystemBase {
-
 
   private static final Pose2d BLUE_START_POSE =
       new Pose2d(new Translation2d(Meter.of(1), Meter.of(4)), Rotation2d.fromDegrees(0));
@@ -54,23 +43,20 @@ public class SwerveSubsystem extends SubsystemBase {
   private final SwerveDrive swerveDrive;
   private final AntiTipController antiTip = new AntiTipController();
 
-  private final SlewLimiter xLimiter = new SlewLimiter(3.5, Constants.LOOP_TIME);
-  private final SlewLimiter yLimiter = new SlewLimiter(3.5, Constants.LOOP_TIME);
-  private final SlewLimiter rotLimiter = new SlewLimiter(6.0, Constants.LOOP_TIME);
+  private final SlewLimiter xLimiter = new SlewLimiter(3.0, Constants.LOOP_TIME);
+  private final SlewLimiter yLimiter = new SlewLimiter(3.0, Constants.LOOP_TIME);
 
   private final StructArrayPublisher<SwerveModuleState> desiredPub;
   private final StructPublisher<Rotation2d> rotationPub;
 
   private final ProfiledPIDController headingPID =
       new ProfiledPIDController(
-          5.5,   
-          0.0,   
-          0.2,   
+          4.0,
+          0.0,
+          0.15,
           new TrapezoidProfile.Constraints(
-              Units.degreesToRadians(90),
-              Units.degreesToRadians(180))
-      );
-
+              Units.degreesToRadians(40),
+              Units.degreesToRadians(90)));
 
   public SwerveSubsystem(File directory) {
     try {
@@ -91,116 +77,64 @@ public class SwerveSubsystem extends SubsystemBase {
     RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroWithAlliance));
 
     var nt = NetworkTableInstance.getDefault();
-    desiredPub  = nt.getStructArrayTopic("/Swerve/desired", SwerveModuleState.struct).publish();
+    desiredPub = nt.getStructArrayTopic("/Swerve/desired", SwerveModuleState.struct).publish();
     rotationPub = nt.getStructTopic("/Swerve/rotation", Rotation2d.struct).publish();
-  }
-
-  public SwerveSubsystem(
-      SwerveDriveConfiguration driveCfg,
-      SwerveControllerConfiguration controllerCfg) {
-
-    swerveDrive =
-        new SwerveDrive(
-            driveCfg,
-            controllerCfg,
-            Constants.MAX_SPEED,
-            new Pose2d(new Translation2d(Meter.of(2), Meter.of(0)), Rotation2d.fromDegrees(0)));
-
-    var nt = NetworkTableInstance.getDefault();
-    desiredPub  = nt.getStructArrayTopic("/Swerve/desired", SwerveModuleState.struct).publish();
-    rotationPub = nt.getStructTopic("/Swerve/rotation", Rotation2d.struct).publish();
-    
-
-    headingPID.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   @Override
   public void periodic() {
     desiredPub.set(swerveDrive.getStates());
     rotationPub.set(swerveDrive.getPose().getRotation());
+
+    Logger.recordOutput("swerve", swerveDrive.getPose());
+    Logger.recordOutput("modules ", swerveDrive.getModulePositions());
   }
 
-  public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
+  public void drive(Translation2d translation, double rotation) {
 
     double x = xLimiter.calculate(translation.getX());
     double y = yLimiter.calculate(translation.getY());
-    double rot = rotLimiter.calculate(rotation);
 
     Translation2d limited = new Translation2d(x, y);
 
     double safety = antiTip.calculateSafetyFactor(getPitch(), getRoll());
-    limited = new Translation2d(limited.getX() * safety, limited.getY() * safety);
-    rot *= safety;
+    limited = limited.times(safety);
+    rotation *= safety;
 
-    swerveDrive.drive(limited, rot, fieldRelative, false);
+    swerveDrive.drive(limited, rotation, true, false);
   }
 
-  public void drive(ChassisSpeeds velocity) {
-    swerveDrive.drive(velocity);
-  }
-
-  public void driveFieldOriented(ChassisSpeeds velocity) {
-    swerveDrive.driveFieldOriented(velocity);
-  }
-
-  public Command driveFieldOriented(java.util.function.Supplier<ChassisSpeeds> velocity) {
-    return run(() -> swerveDrive.driveFieldOriented(velocity.get()));
-  }
-
-  public Command snapToAngle(Rotation2d targetAngle,java.util.function.Supplier<Translation2d> translationSupplier) {
-
+  public Command snapToAngleOnce(Rotation2d targetAngle) {
     return run(() -> {
-          Rotation2d current = getHeading();
-
           double rotOutput =
               headingPID.calculate(
-                  current.getRadians(),
-                  targetAngle.getRadians()
-              );
-
-          Translation2d translation = translationSupplier.get();
+                  getHeading().getRadians(),
+                  targetAngle.getRadians());
 
           swerveDrive.drive(
-              translation,
+              new Translation2d(0, 0),
               rotOutput,
               true,
-              false
-          );
+              false);
         })
         .beforeStarting(() -> headingPID.reset(getHeading().getRadians()))
-        .withName("SnapToAngle_" + targetAngle.getDegrees());
+        .until(() -> Math.abs(getHeading().minus(targetAngle).getDegrees()) < 2.0);
   }
-  public Command snapToAngleOnce(
-    Rotation2d targetAngle,
-    java.util.function.Supplier<Translation2d> translationSupplier) {
 
-  return run(() -> {
-        Rotation2d current = getHeading();
+  public double getTotalRobotCurrent() {
+    double sum = 0.0;
 
-        double rotOutput =
-            headingPID.calculate(
-                current.getRadians(),
-                targetAngle.getRadians()
-            );
+    for (var module : swerveDrive.getModules()) {
+      Object drive = module.getDriveMotor().getMotor();
+      Object angle = module.getAngleMotor().getMotor();
 
-        Translation2d translation = translationSupplier.get();
-
-        swerveDrive.drive(
-            translation,
-            rotOutput,
-            true,
-            false
-        );
-      })
-      .beforeStarting(() -> headingPID.reset(getHeading().getRadians()))
-      .until(() -> 
-          Math.abs(
-              getHeading().minus(targetAngle).getDegrees()
-          ) < 2.0   // tolerância em graus
-      )
-      .withName("SnapToAngleOnce_" + targetAngle.getDegrees());
-}
-
+      if (RobotBase.isReal()) {
+        if (drive instanceof SparkMax d) sum += d.getOutputCurrent();
+        if (angle instanceof SparkMax a) sum += a.getOutputCurrent();
+      }
+    }
+    return sum;
+  }
 
   private void setupPathPlanner() {
     try {
@@ -215,9 +149,8 @@ public class SwerveSubsystem extends SubsystemBase {
               new PIDConstants(5.0, 0.0, 0.0),
               new PIDConstants(5.0, 0.0, 0.0)),
           config,
-          () ->
-              DriverStation.getAlliance().isPresent()
-                  && DriverStation.getAlliance().get() == DriverStation.Alliance.Red,
+          () -> DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+              == DriverStation.Alliance.Red,
           this);
 
     } catch (Exception e) {
@@ -226,27 +159,13 @@ public class SwerveSubsystem extends SubsystemBase {
 
     PathfindingCommand.warmupCommand().schedule();
   }
+  
+  public Command driveFieldOriented(SwerveInputStream input) {
+    return run(() -> swerveDrive.driveFieldOriented(input.get()));
+  }
 
   public Command getAutonomousCommand(String pathName) {
     return new PathPlannerAuto(pathName);
-  }
-
-  public Command driveToPose(Pose2d pose) {
-    PathConstraints constraints =
-        new PathConstraints(
-            swerveDrive.getMaximumChassisVelocity(),
-            4.0,
-            swerveDrive.getMaximumChassisAngularVelocity(),
-            Units.degreesToRadians(720));
-
-    return AutoBuilder.pathfindToPose(
-        pose,
-        constraints,
-        edu.wpi.first.units.Units.MetersPerSecond.of(0));
-  }
-
-  public void resetOdometry(Pose2d pose) {
-    swerveDrive.resetOdometry(pose);
   }
 
   public Pose2d getPose() {
@@ -257,34 +176,8 @@ public class SwerveSubsystem extends SubsystemBase {
     return swerveDrive.getRobotVelocity();
   }
 
-  public ChassisSpeeds getFieldVelocity() {
-    return swerveDrive.getFieldVelocity();
-  }
-
   public Rotation2d getHeading() {
     return getPose().getRotation();
-  }
-
-  public void zeroGyro() {
-    swerveDrive.zeroGyro();
-  }
-
-  private Pose2d getStartingPoseForAlliance() {
-    var alliance = DriverStation.getAlliance();
-    if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red) {
-      return RED_START_POSE;
-    }
-    return BLUE_START_POSE;
-  }
-
-  public void zeroGyroWithAlliance() {
-    zeroGyro();
-    resetOdometry(getStartingPoseForAlliance());
-  }
-
-  public double getChassisSpeedMPS() {
-    var speeds = swerveDrive.getRobotVelocity();
-    return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
   }
 
   public Rotation2d getPitch() {
@@ -295,31 +188,28 @@ public class SwerveSubsystem extends SubsystemBase {
     return swerveDrive.getRoll();
   }
 
-  public void setMotorBrake(boolean brake) {
-    swerveDrive.setMotorIdleMode(brake);
+  public void resetOdometry(Pose2d pose) {
+    swerveDrive.resetOdometry(pose);
   }
 
-  public void lock() {
-    swerveDrive.lockPose();
+  public void zeroGyro() {
+    swerveDrive.zeroGyro();
   }
 
-  public void replaceSwerveModuleFeedforward(double kS, double kV, double kA) {
-    swerveDrive.replaceSwerveModuleFeedforward(new SimpleMotorFeedforward(kS, kV, kA));
+  private void zeroGyroWithAlliance() {
+    zeroGyro();
+    resetOdometry(
+        DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+            == DriverStation.Alliance.Red
+                ? RED_START_POSE
+                : BLUE_START_POSE);
   }
 
   public SwerveDrive getSwerveDrive() {
     return swerveDrive;
   }
 
-  public SwerveDriveKinematics getKinematics() {
-    return swerveDrive.kinematics;
-  }
-
-  public SwerveController getSwerveController() {
-    return swerveDrive.swerveController;
-  }
-
-  public SwerveDriveConfiguration getSwerveDriveConfiguration() {
-    return swerveDrive.swerveDriveConfiguration;
-  }
+public void setMotorBrake(boolean brake) {
+  swerveDrive.setMotorIdleMode(brake);
+}
 }

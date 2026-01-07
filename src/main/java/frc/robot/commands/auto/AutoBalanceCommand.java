@@ -24,8 +24,7 @@ public class AutoBalanceCommand extends Command {
   }
 
   @Override
-  public void initialize()
-  {
+  public void initialize(){
 
   }
 
@@ -36,7 +35,7 @@ public class AutoBalanceCommand extends Command {
 
     double translationVal = MathUtil.clamp(controller.calculate(swerveSubsystem.getPitch().getDegrees(), 0.0), -0.5,
                                            0.5);
-    swerveSubsystem.drive(new Translation2d(translationVal, 0.0), 0.0, true);
+    swerveSubsystem.drive(new Translation2d(translationVal, 0.0), 0.0);
   }
 
   @Override
@@ -46,8 +45,7 @@ public class AutoBalanceCommand extends Command {
   }
 
   @Override
-  public void end(boolean interrupted)
-  {
-    swerveSubsystem.lock();
+  public void end(boolean interrupted){
+   
   }
 }
