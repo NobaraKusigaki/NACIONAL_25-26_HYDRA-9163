@@ -17,8 +17,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -54,6 +58,9 @@ public class SwerveSubsystem extends SubsystemBase {
   private final SlewLimiter yLimiter = new SlewLimiter(3.5, Constants.LOOP_TIME);
   private final SlewLimiter rotLimiter = new SlewLimiter(6.0, Constants.LOOP_TIME);
 
+  private final StructArrayPublisher<SwerveModuleState> desiredPub;
+  private final StructPublisher<Rotation2d> rotationPub;
+
   private final ProfiledPIDController headingPID =
       new ProfiledPIDController(
           5.5,   
@@ -82,6 +89,10 @@ public class SwerveSubsystem extends SubsystemBase {
 
     setupPathPlanner();
     RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroWithAlliance));
+
+    var nt = NetworkTableInstance.getDefault();
+    desiredPub  = nt.getStructArrayTopic("/Swerve/desired", SwerveModuleState.struct).publish();
+    rotationPub = nt.getStructTopic("/Swerve/rotation", Rotation2d.struct).publish();
   }
 
   public SwerveSubsystem(
@@ -95,11 +106,19 @@ public class SwerveSubsystem extends SubsystemBase {
             Constants.MAX_SPEED,
             new Pose2d(new Translation2d(Meter.of(2), Meter.of(0)), Rotation2d.fromDegrees(0)));
 
+    var nt = NetworkTableInstance.getDefault();
+    desiredPub  = nt.getStructArrayTopic("/Swerve/desired", SwerveModuleState.struct).publish();
+    rotationPub = nt.getStructTopic("/Swerve/rotation", Rotation2d.struct).publish();
+    
+
     headingPID.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   @Override
-  public void periodic() {}
+  public void periodic() {
+    desiredPub.set(swerveDrive.getStates());
+    rotationPub.set(swerveDrive.getPose().getRotation());
+  }
 
   public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
 
