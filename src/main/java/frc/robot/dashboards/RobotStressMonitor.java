@@ -1,30 +1,12 @@
 package frc.robot.dashboards;
 
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
 public class RobotStressMonitor {
 
-    private final PowerDistribution pdh;
-
-    public RobotStressMonitor(int pdhID) {
-        pdh = new PowerDistribution(pdhID, PowerDistribution.ModuleType.kRev);
-    }
-
     public double getBatteryVoltage() {
         return RobotController.getBatteryVoltage();
-    }
-
-    public double getTotalCurrent() {
-        return pdh.getTotalCurrent();
-    }
-
-    public double getDrivetrainCurrent(int[] channels) {
-        double sum = 0;
-        for (int c : channels) {
-            sum += pdh.getCurrent(c);
-        }
-        return sum;
     }
 
     private double batteryStress(double voltage) {
@@ -35,9 +17,8 @@ public class RobotStressMonitor {
         return 100;
     }
 
-    public double calculateStressScore(double drivetrainCurrent) {
+    public double calculateStressScore(double drivetrainCurrent, double totalCurrent) {
         double voltage = getBatteryVoltage();
-        double totalCurrent = getTotalCurrent();
 
         double voltageStress = batteryStress(voltage);
         double drivetrainStress = drivetrainCurrent * 0.15;
@@ -53,23 +34,23 @@ public class RobotStressMonitor {
         if (score < 70) return "HIGH";
         return "CRITICAL";
     }
-    
 
-    public RobotStressData generateData(int[] drivetrainChannels) {
+    public RobotStressData generateData(SwerveSubsystem drivebase) {
+
         double voltage = getBatteryVoltage();
-        double totalCurrent = getTotalCurrent();
-        double drivetrainCurrent = getDrivetrainCurrent(drivetrainChannels);
-    
-        double score = calculateStressScore(drivetrainCurrent);
+
+        double drivetrainCurrent = drivebase.getTotalRobotCurrent();
+        double totalCurrent = drivebase.getTotalRobotCurrent();
+
+        double score = calculateStressScore(drivetrainCurrent, totalCurrent);
         String level = getStressLevel(score);
-    
+
         return new RobotStressData(
-                voltage,
-                totalCurrent,
-                drivetrainCurrent,
-                score,
-                level
+            voltage,
+            totalCurrent,
+            drivetrainCurrent,
+            score,
+            level
         );
     }
-    
 }
