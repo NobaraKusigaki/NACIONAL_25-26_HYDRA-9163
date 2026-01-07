@@ -1,4 +1,4 @@
-package frc.robot.dashboards;
+package frc.robot.DataDashboards;
 
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
