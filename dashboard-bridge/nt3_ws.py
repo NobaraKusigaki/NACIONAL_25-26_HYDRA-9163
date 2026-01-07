@@ -6,13 +6,12 @@ import time
 from networktables import NetworkTables
 import websockets
 
-# Configurações padrão (mude se quiser)
-DEFAULT_ROBORIO = "10.91.63.2"   # troque para o IP do seu roboRIO ou roborio-9163-frc.local
+DEFAULT_ROBORIO = "10.91.63.2" 
 WS_HOST = "0.0.0.0"
 DEFAULT_WS_PORT = 5810
 WS_PATH = "/nt/dashboard"
 
-# Tabela e chaves que o seu front (stress.js) espera
+
 TABLES_AND_KEYS = {
     "RobotStress": [
         "batteryVoltage",
@@ -25,7 +24,7 @@ TABLES_AND_KEYS = {
     ]
 }
 
-POLL_INTERVAL = 0.15  # segundos entre polls (ajuste conforme necessidade)
+POLL_INTERVAL = 0.15 
 
 clients = set()
 
@@ -33,7 +32,6 @@ def connect_nt(roborio_host):
     """Inicializa a conexão com NetworkTables (NT3)."""
     print(f"Inicializando NetworkTables -> server={roborio_host}")
     NetworkTables.initialize(server=roborio_host)
-    # Espera conectar (útil para debug)
     waited = 0.0
     while not NetworkTables.isConnected():
         time.sleep(0.1)
@@ -57,7 +55,6 @@ async def poll_and_broadcast():
             table = get_table(table_name)
             for key in keys:
                 topic = f"/{table_name}/{key}"
-                # tenta número -> string -> boolean
                 val = None
                 try:
                     val = table.getNumber(key, None)
@@ -70,9 +67,7 @@ async def poll_and_broadcast():
                         val = None
                 if val is None:
                     try:
-                        # getBoolean exige default; se chave inexistente retorna default
                         val_bool = table.getBoolean(key, None)
-                        # Se devolveu None, chave não existe; se True/False, usa booleano
                         if val_bool is not None:
                             val = bool(val_bool)
                         else:
@@ -80,12 +75,10 @@ async def poll_and_broadcast():
                     except Exception:
                         val = None
 
-                # se valor mudou (ou primeira vez) -> envia para clients
                 if topic not in last_values or last_values[topic] != val:
                     last_values[topic] = val
                     payload = {"topic": topic, "value": val}
                     msg = json.dumps(payload)
-                    # envia para todos os clientes conectados
                     to_remove = []
                     for ws in clients:
                         try:
@@ -129,7 +122,6 @@ async def handle_ws(ws):
                     "value": val
                 }))
 
-        # loop de mensagens
         async for message in ws:
             obj = json.loads(message)
             if obj.get("action") == "put":
@@ -152,13 +144,9 @@ async def handle_ws(ws):
         print("🔴 Browser desconectou")
 
 async def main_async(roborio, port):
-    # inicializa NT3 (bloqueante – roda em thread principal antes do loop async)
     connect_nt(roborio)
-
-    # inicia servidor WS e polling
     server = await websockets.serve(handle_ws, WS_HOST, port)
     print(f"WebSocket server ouvindo em ws://localhost:{port}{WS_PATH}")
-    # start poll task
     poll_task = asyncio.create_task(poll_and_broadcast())
 
     await server.wait_closed()
