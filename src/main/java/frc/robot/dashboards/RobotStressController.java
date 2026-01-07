@@ -2,44 +2,34 @@ package frc.robot.dashboards;
 
 public class RobotStressController {
 
-    private double speedScale = 1.0;
-    private boolean critical = false;
+    private double maxAllowedSpeedMps = 3.6; // default (12 ft/s)
+    private boolean reduced = false;
 
     public void update(RobotStressData data) {
 
-        critical = false;
+        reduced = false;
 
-        switch (data.stressLevel) {
+        double voltage = data.batteryVoltage;
 
-            case "LOW":
-                speedScale = 1.0;
-                break;
-
-            case "MEDIUM":
-                speedScale = 0.9;
-                break;
-
-            case "HIGH":
-                speedScale = 0.75;
-                break;
-
-            case "CRITICAL":
-                speedScale = 0.6;
-                critical = true;
-                break;
-
-            default:
-                speedScale = 0.45;
-                critical = true;
-                break;
+        if (voltage >= 11.0) {
+            maxAllowedSpeedMps = 3.6;
+        } else if (voltage >= 10.0) {
+            maxAllowedSpeedMps = 2.8;
+            reduced = true;
+        } else if (voltage >= 9.0) {
+            maxAllowedSpeedMps = 2.2;
+            reduced = true;
+        } else {
+            maxAllowedSpeedMps = 1.8;
+            reduced = true;
         }
     }
 
-    public double getSpeedScale() {
-        return speedScale;
+    public double getMaxAllowedSpeedMps() {
+        return maxAllowedSpeedMps;
     }
 
-    public boolean isCritical() {
-        return critical;
+    public boolean isSpeedReduced() {
+        return reduced;
     }
 }
