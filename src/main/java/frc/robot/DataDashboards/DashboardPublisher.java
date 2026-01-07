@@ -1,15 +1,12 @@
-package frc.robot.dashboards;
+package frc.robot.DataDashboards;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 public class DashboardPublisher {
-
-    private final NetworkTable stressTable =
-            NetworkTableInstance.getDefault().getTable("RobotStress");
-
-    private final RobotStressController stressController = new RobotStressController();
-    public void publish(RobotStressData data, double speedScale, double chassisSpeed) {
+    private final NetworkTable stressTable = NetworkTableInstance.getDefault().getTable("RobotStress");
+    
+public void publish(RobotStressData data, double speedScale, double chassisSpeed) {
 
         stressTable.getEntry("batteryVoltage").setDouble(data.batteryVoltage);
         stressTable.getEntry("totalCurrent").setDouble(data.totalCurrent);
@@ -21,6 +18,5 @@ public class DashboardPublisher {
         stressTable.getEntry("speedScale").setDouble(speedScale);
         stressTable.getEntry("chassisSpeed").setDouble(chassisSpeed);
 
-        //stressTable.getEntry("voltageLimited").setBoolean(stressController.isVoltageLimited());
     }
 }

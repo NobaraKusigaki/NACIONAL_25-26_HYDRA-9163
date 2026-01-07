@@ -26,6 +26,8 @@ import frc.robot.Utils.DriveUtils.SlewLimiter;
 
 import java.io.File;
 
+import org.littletonrobotics.junction.Logger;
+
 import swervelib.*;
 import swervelib.parser.SwerveParser;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -53,8 +55,8 @@ public class SwerveSubsystem extends SubsystemBase {
           0.0,
           0.15,
           new TrapezoidProfile.Constraints(
-              Units.degreesToRadians(60),
-              Units.degreesToRadians(120)));
+              Units.degreesToRadians(40),
+              Units.degreesToRadians(90)));
 
   public SwerveSubsystem(File directory) {
     try {
@@ -83,6 +85,9 @@ public class SwerveSubsystem extends SubsystemBase {
   public void periodic() {
     desiredPub.set(swerveDrive.getStates());
     rotationPub.set(swerveDrive.getPose().getRotation());
+
+    Logger.recordOutput("swerve", swerveDrive.getPose());
+    Logger.recordOutput("modules ", swerveDrive.getModulePositions());
   }
 
   public void drive(Translation2d translation, double rotation) {
