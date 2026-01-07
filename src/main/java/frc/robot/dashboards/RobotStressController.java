@@ -32,4 +32,9 @@ public class RobotStressController {
     public boolean isSpeedReduced() {
         return reduced;
     }
+
+    public double getSpeedScale() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getSpeedScale'");
+    }
 }
