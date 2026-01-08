@@ -7,6 +7,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.DataDashboards.*;
+import frc.robot.subsystems.Score.MotorTestSubsystem;
+import frc.robot.subsystems.Score.StreamDeckMotorController;
+import frc.robot.subsystems.Score.StreamDeckMotorController;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
 import java.io.File;
@@ -16,6 +19,11 @@ import swervelib.SwerveInputStream;
 public class RobotContainer {
 
   private final CommandPS5Controller controller = new CommandPS5Controller(0);
+  private final MotorTestSubsystem motorTestSubsystem = new MotorTestSubsystem(20);
+
+
+private final StreamDeckMotorController streamDeckMotor = 
+new StreamDeckMotorController(motorTestSubsystem);
 
   private final SwerveSubsystem drivebase =
       new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
@@ -40,9 +48,11 @@ public class RobotContainer {
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
   }
-
+  
   private void configureBindings() {
 
+
+    //####### motores de angulação ########
     drivebase.setDefaultCommand(
         drivebase.driveFieldOriented(driveAngularVelocity));
 
