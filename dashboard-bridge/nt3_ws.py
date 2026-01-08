@@ -21,6 +21,11 @@ TABLES_AND_KEYS = {
         "stressLevel",
         "speedScale",
         "chassisSpeed"
+    ],
+    "StreamDeck/MotorTest": [
+        "enable",
+        "direction",
+        "status"
     ]
 }
 
