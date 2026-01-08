@@ -11,6 +11,10 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.Score.StreamDeckMotorController;
+
+import java.util.stream.Stream;
+
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
@@ -21,6 +25,7 @@ public class Robot extends LoggedRobot {
   public Robot() {
    
     robotContainer = new RobotContainer();
+ 
   }
 
    @Override
@@ -50,10 +55,7 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("Robot/LoopTimeSec", edu.wpi.first.wpilibj.Timer.getFPGATimestamp() );
     
     robotContainer.updateDashboards();
-     
-    NetworkTableInstance.getDefault()
-        .getEntry("/RobotStress/TEST")
-        .setDouble(Math.random() * 100);
+   
   }
 
  
