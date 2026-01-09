@@ -55,8 +55,8 @@ public class SwerveSubsystem extends SubsystemBase {
           0.0,
           0.2,
           new TrapezoidProfile.Constraints(
-              Units.degreesToRadians(25),
-              Units.degreesToRadians(60)));
+              Units.degreesToRadians(60),
+              Units.degreesToRadians(100)));
 
   public SwerveSubsystem(File directory) {
     try {
@@ -118,7 +118,7 @@ public class SwerveSubsystem extends SubsystemBase {
               false);
         })
         .beforeStarting(() -> headingPID.reset(getHeading().getRadians()))
-        .until(() -> Math.abs(getHeading().minus(targetAngle).getDegrees()) < 2.0);
+        .until(() -> Math.abs(getHeading().minus(targetAngle).getDegrees()) < 1.0);
   }
 
   public double getTotalRobotCurrent() {

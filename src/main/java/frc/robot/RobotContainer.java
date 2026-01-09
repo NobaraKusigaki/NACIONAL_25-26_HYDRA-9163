@@ -5,11 +5,10 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import frc.robot.DataDashboards.*;
-import frc.robot.DataDashboards.RobotStress.DashboardPublisher;
-import frc.robot.DataDashboards.RobotStress.RobotStressController;
-import frc.robot.DataDashboards.RobotStress.RobotStressData;
-import frc.robot.DataDashboards.RobotStress.RobotStressMonitor;
+import frc.robot.RobotStress.DashboardPublisher;
+import frc.robot.RobotStress.RobotStressController;
+import frc.robot.RobotStress.RobotStressData;
+import frc.robot.RobotStress.RobotStressMonitor;
 import frc.robot.subsystems.Score.MotorTestSubsystem;
 import frc.robot.subsystems.Score.StreamDeckMotorController;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
@@ -47,7 +46,7 @@ public class RobotContainer {
           drivebase.drive(
               new Translation2d(
                   -controller.getLeftY(),
-                  -controller.getLeftX()
+                  controller.getLeftX()
               ),
               controller.getRightX()
           );
