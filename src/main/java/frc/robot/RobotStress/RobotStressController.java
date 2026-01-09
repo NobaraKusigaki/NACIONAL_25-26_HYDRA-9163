@@ -1,4 +1,4 @@
-package frc.robot.DataDashboards.RobotStress;
+package frc.robot.RobotStress;
 
 public class RobotStressController {
 
