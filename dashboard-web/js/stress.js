@@ -18,7 +18,7 @@ socket.onclose = () => {
 socket.onmessage = event => {
   const msg = JSON.parse(event.data);
 
-  // esperado: { topic, value }
+  
   if (!msg.topic) return;
 
   nt[msg.topic] = msg.value;
