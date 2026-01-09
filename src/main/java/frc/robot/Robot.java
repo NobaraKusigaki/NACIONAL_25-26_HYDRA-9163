@@ -36,12 +36,12 @@ public class Robot extends LoggedRobot {
       Logger.addDataReceiver(new WPILOGWriter("/U/logs"));
       Logger.addDataReceiver(new NT4Publisher());
     }
-    Logger.start();
-    try {
-     Logger.start();
- } catch (Exception e) {
-     e.printStackTrace();
- }
+//     Logger.start();
+//     try {
+//      Logger.start();
+//  } catch (Exception e) {
+//      e.printStackTrace();
+//  }
   }
 
   @Override
