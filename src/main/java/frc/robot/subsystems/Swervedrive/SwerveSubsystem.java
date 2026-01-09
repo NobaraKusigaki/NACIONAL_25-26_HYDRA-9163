@@ -51,12 +51,12 @@ public class SwerveSubsystem extends SubsystemBase {
 
   private final ProfiledPIDController headingPID =
       new ProfiledPIDController(
-          4.0,
+          2.0,
           0.0,
-          0.15,
+          0.2,
           new TrapezoidProfile.Constraints(
-              Units.degreesToRadians(40),
-              Units.degreesToRadians(90)));
+              Units.degreesToRadians(25),
+              Units.degreesToRadians(60)));
 
   public SwerveSubsystem(File directory) {
     try {
@@ -68,8 +68,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
     swerveDrive.setHeadingCorrection(false);
     swerveDrive.setCosineCompensator(false);
-    swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
-    swerveDrive.setModuleEncoderAutoSynchronize(true, 1);
+    swerveDrive.setAngularVelocityCompensation(false, false, 0.0);
+    //swerveDrive.setModuleEncoderAutoSynchronize(true, 1);
 
     headingPID.enableContinuousInput(-Math.PI, Math.PI);
 
