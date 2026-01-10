@@ -40,7 +40,7 @@ public class Robot extends LoggedRobot {
 //     try {
 //      Logger.start();
 //  } catch (Exception e) {
-//      e.printStackTrace();
+//      e.printStackTrace(); 1
 //  }
   }
 
