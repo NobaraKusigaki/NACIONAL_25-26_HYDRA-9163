@@ -1,4 +1,4 @@
-package frc.robot.RobotStress;
+package frc.robot.Dashboards.RobotStress;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
