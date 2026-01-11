@@ -1,48 +1,171 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <title>HYDRA Limelight Dashboard</title>
+
+  <!-- CSS -->
   <link rel="stylesheet" href="./css/global.css">
+  <link rel="stylesheet" href="./css/limelight.css">
+  <link rel="stylesheet" href="./css/arrow+bbox.css">
 </head>
 
 <body>
   <div id="dashboard-root">
+    <div class="limelight-grid">
 
-    
+      <!-- ========================= -->
+      <!-- LINHA 1 — CAMERA LOCAL -->
+      <!-- ========================= -->
+      <div class="limelight-row">
 
-      <div class="limelight-grid">
-
-        <div class="limelight-row">
-          <div class="camera-box">
-            <img
-              src="http://10.91.63.30:5800/stream.mjpg"
-              alt="Limelight"
-              style="width:100%; height:100%; object-fit:cover;"
-              
-            >
-          </div>
-
-          <div class="info-box">
-            <p>INFO</p>
-          </div>
+        <div class="camera-box">
+          <video id="localCam" autoplay playsinline muted></video>
         </div>
 
-        <div class="limelight-row">
-          <div class="camera-box">
-            <p>Lime 2+</p>
+        <div class="info-box">
+          <div class="info-title">Lime 4</div>
+
+          <!-- ALINHADOR -->
+          <div class="offset-container" id="alinhador-lime4">
+            <div class="offset-line">
+              <span class="offset-label">Alinhador (IA):</span>
+              <div class="offset-box"></div>
+            </div>
+            <div class="offset-modes">
+              <span data-mode="0">OFF</span> |
+              <span data-mode="1">ON</span> |
+              <span data-mode="2">AUTO</span>
+            </div>
           </div>
 
-          <div class="info-box">
-            <p>INFO</p>
+          <!-- YAW -->
+          <div class="offset-container" id="yaw-lime4">
+            <div class="offset-line">
+              <span class="offset-label">Trava de Mira:</span>
+              <div class="offset-box"></div>
+            </div>
+            <div class="offset-modes">
+              <span data-mode="0">OFF</span> |
+              <span data-mode="1">ON</span> |
+              <span data-mode="2">BALL</span>
+            </div>
+          </div>
+
+          <!-- TESTE 1 -->
+          <div class="offset-container" id="teste1-lime4">
+            <div class="offset-line">
+              <span class="offset-label">Modo Teste 1:</span>
+              <div class="offset-box"></div>
+            </div>
+            <div class="offset-modes">
+              <span data-mode="0">OFF</span> |
+              <span data-mode="1">ON</span> |
+              <span data-mode="2">AUTO</span>
+            </div>
+          </div>
+
+          <!-- TESTE 2 -->
+          <div class="offset-container" id="teste2-lime4">
+            <div class="offset-line">
+              <span class="offset-label">Modo Teste 2:</span>
+              <div class="offset-box"></div>
+            </div>
+            <div class="offset-modes">
+              <span data-mode="0">OFF</span> |
+              <span data-mode="1">ON</span> |
+              <span data-mode="2">AUTO</span>
+            </div>
           </div>
         </div>
-
       </div>
-    </section>
 
+      <!-- ========================= -->
+      <!-- LINHA 2 — LIMELIGHT -->
+      <!-- ========================= -->
+      <div class="limelight-row">
+
+        <div class="camera-box arrow-parent">
+          <img
+            src="http://limelight.local:5800/stream.mjpg"
+            alt="Limelight Stream"
+            style="width:100%; height:100%; object-fit:cover;"
+          >
+          <div id="arrow" class="hidden"></div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-title">Lime 2+</div>
+
+          <!-- ALINHADOR -->
+          <div class="offset-container" id="alinhador-lime2">
+            <div class="offset-line">
+              <span class="offset-label">Alinhador (IA):</span>
+              <div class="offset-box"></div>
+            </div>
+            <div class="offset-modes">
+              <span data-mode="0">OFF</span> |
+              <span data-mode="1">ON</span> |
+              <span data-mode="2">AUTO</span>
+            </div>
+          </div>
+
+          <!-- YAW -->
+          <div class="offset-container" id="yaw-lime2">
+            <div class="offset-line">
+              <span class="offset-label">Trava de Mira:</span>
+              <div class="offset-box"></div>
+            </div>
+            <div class="offset-modes">
+              <span data-mode="0">OFF</span> |
+              <span data-mode="1">ON</span> |
+              <span data-mode="2">BALL</span>
+            </div>
+          </div>
+
+          <!-- TESTE 1 -->
+          <div class="offset-container" id="teste1-lime2">
+            <div class="offset-line">
+              <span class="offset-label">Modo Teste 1:</span>
+              <div class="offset-box"></div>
+            </div>
+            <div class="offset-modes">
+              <span data-mode="0">OFF</span> |
+              <span data-mode="1">ON</span> |
+              <span data-mode="2">AUTO</span>
+            </div>
+          </div>
+
+          <!-- TESTE 2 -->
+          <div class="offset-container" id="teste2-lime2">
+            <div class="offset-line">
+              <span class="offset-label">Modo Teste 2:</span>
+              <div class="offset-box"></div>
+            </div>
+            <div class="offset-modes">
+              <span data-mode="0">OFF</span> |
+              <span data-mode="1">ON</span> |
+              <span data-mode="2">AUTO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
-</body>
 
+  <!-- JS -->
+  <script src="./js/arrow.js"></script>
+  <script src="./js/modes.js"></script>
+
+  <!-- CAMERA LOCAL -->
+  <script>
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then(stream => {
+        document.getElementById("localCam").srcObject = stream;
+      })
+      .catch(console.error);
+  </script>
+
+</body>
 </html>
