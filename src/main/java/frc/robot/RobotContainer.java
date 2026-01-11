@@ -9,7 +9,6 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.DataDashboards.*;
 import frc.robot.subsystems.Score.MotorTestSubsystem;
 import frc.robot.subsystems.Score.StreamDeckMotorController;
-import frc.robot.subsystems.Score.StreamDeckMotorController;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
 import java.io.File;
@@ -22,6 +21,7 @@ public class RobotContainer {
   private final MotorTestSubsystem motorTestSubsystem = new MotorTestSubsystem(20);
 
 
+@SuppressWarnings("unused")
 private final StreamDeckMotorController streamDeckMotor = 
 new StreamDeckMotorController(motorTestSubsystem);
 
