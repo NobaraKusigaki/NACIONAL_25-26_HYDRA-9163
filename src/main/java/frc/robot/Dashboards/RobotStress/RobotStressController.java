@@ -1,5 +1,4 @@
-package frc.robot.DataDashboards;
-
+package frc.robot.Dashboards.RobotStress;
 public class RobotStressController {
 
     private double maxAllowedSpeedMps = 3.6; // default (12 ft/s)
