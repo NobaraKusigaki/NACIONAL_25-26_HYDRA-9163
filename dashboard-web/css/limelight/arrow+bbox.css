@@ -1,44 +1,70 @@
-/* container já é a camera-box */
+/* =====================================================
+   CONTAINER DA CÂMERA (overlay)
+===================================================== */
 .arrow-parent {
   position: relative;
+  width: 100%;
+
+  /* NÃO force height:100% aqui.
+     Quem manda na altura é a .camera-box (fixa). */
+  overflow: hidden;
 }
 
-/* ======================
-   SETA
-====================== */
-#arrow {
+/* Garante que o stream preencha e seja recortado dentro da camera-box */
+.arrow-parent img,
+.arrow-parent video {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+}
+
+/* =====================================================
+   SETA DE ALINHAMENTO (overlay)
+===================================================== */
+.arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  
+
   font-size: 64px;
-  font-weight: bold;
-  color: red;
+  font-weight: 900;
+  color: #ff2b2b;
 
   z-index: 10;
+  pointer-events: none;
+  user-select: none;
+
+  text-shadow:
+    0 0 6px rgba(0, 0, 0, 0.8),
+    0 0 14px rgba(0, 0, 0, 0.6);
 }
 
-/* escondida */
+/* escondida (sem alvo / stale / erro) */
 .hidden {
   display: none;
 }
 
-/* lados */
+/* lados da seta */
 .arrow-left {
-  left: 10px;
+  left: 12px;
 }
 
 .arrow-right {
-  right: 10px;
+  right: 12px;
 }
 
-/* ======================
-   BOUNDING BOX
-====================== */
-#bbox {
+/* =====================================================
+   BOUNDING BOX (overlay da detecção)
+===================================================== */
+.bbox {
   position: absolute;
-  border: 2px solid rgba(255, 0, 0, 0.767);
+
+  border: 2px solid rgba(255, 0, 0, 0.8);
   box-sizing: border-box;
+
   pointer-events: none;
+  user-select: none;
+
   z-index: 5; /* abaixo da seta, acima do vídeo */
 }

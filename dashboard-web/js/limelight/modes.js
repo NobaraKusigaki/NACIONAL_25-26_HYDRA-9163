@@ -3,16 +3,14 @@
 // ==========================
 const state = {
     lime4: {
-      alinhador: 1, // 0 OFF | 1 ON | 2 AUTO
-      yaw: 2,       // 0 OFF | 1 ON | 2 BALL
-      teste1: 0,    // 0 OFF | 1 ON | 2 AUTO
-      teste2: 1     // 0 OFF | 1 ON | 2 AUTO
+      alinhador: 0, // 0 OFF | 1 ON | 2 AUTO
+      yaw: 0,       // 0 OFF | 1 ON | 2 BALL
+      teste1: 0    // 0 OFF | 1 ON | 2 AUTO
     },
     lime2: {
       alinhador: 0,
       yaw: 0,
-      teste1: 0,
-      teste2: 0
+      teste1: 0
     }
   };
   
@@ -62,13 +60,11 @@ const state = {
     renderMode("alinhador-lime4", state.lime4.alinhador);
     renderMode("yaw-lime4", state.lime4.yaw);
     renderMode("teste1-lime4", state.lime4.teste1);
-    renderMode("teste2-lime4", state.lime4.teste2);
   
     // Lime 2+
     renderMode("alinhador-lime2", state.lime2.alinhador);
     renderMode("yaw-lime2", state.lime2.yaw);
     renderMode("teste1-lime2", state.lime2.teste1);
-    renderMode("teste2-lime2", state.lime2.teste2);
   }
   
   // ==========================
@@ -82,13 +78,11 @@ const state = {
       case "1": state.lime4.alinhador = (state.lime4.alinhador + 1) % 3; break;
       case "2": state.lime4.yaw       = (state.lime4.yaw + 1) % 3; break;
       case "3": state.lime4.teste1    = (state.lime4.teste1 + 1) % 3; break;
-      case "4": state.lime4.teste2    = (state.lime4.teste2 + 1) % 3; break;
   
       // Lime 2+
       case "5": state.lime2.alinhador = (state.lime2.alinhador + 1) % 3; break;
       case "6": state.lime2.yaw       = (state.lime2.yaw + 1) % 3; break;
       case "7": state.lime2.teste1    = (state.lime2.teste1 + 1) % 3; break;
-      case "8": state.lime2.teste2    = (state.lime2.teste2 + 1) % 3; break;
   
       default: return;
     }

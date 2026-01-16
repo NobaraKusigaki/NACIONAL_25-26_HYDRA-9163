@@ -22,6 +22,7 @@ public class RobotContainer {
   private final MotorTestSubsystem motorTestSubsystem =
       new MotorTestSubsystem(20);
 
+  @SuppressWarnings("unused")
   private final StreamDeckMotorController streamDeckMotor =
       new StreamDeckMotorController(motorTestSubsystem);
 
@@ -45,10 +46,10 @@ public class RobotContainer {
         Commands.run(() -> {
           drivebase.drive(
               new Translation2d(
-                  -controller.getLeftY(),
-                  controller.getLeftX()
+                  -controller.getLeftY() * Constants.MAX_SPEED,
+                  -controller.getLeftX() * Constants.MAX_SPEED
               ),
-              controller.getRightX()
+              controller.getRightX() * Constants.MAX_SPEED
           );
         }, drivebase)
     );

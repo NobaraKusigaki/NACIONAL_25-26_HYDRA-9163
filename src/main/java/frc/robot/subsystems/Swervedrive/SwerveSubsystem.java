@@ -101,7 +101,10 @@ public class SwerveSubsystem extends SubsystemBase {
     limited = limited.times(safety);
     rotation *= safety;
 
-    swerveDrive.drive(limited, rotation, true, false);
+    if (Math.abs(x) < 0.05) { x = 0; }
+    if (Math.abs(y) < 0.05) { y = 0; }
+    
+    swerveDrive.drive(limited, rotation, false, false);
   }
 
   public Command snapToAngleOnce(Rotation2d targetAngle) {
