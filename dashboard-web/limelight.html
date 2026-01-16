@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>HYDRA Limelight Dashboard</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="./css/global.css">
-  <link rel="stylesheet" href="./css/limelight/limelight_box.css">
-  <link rel="stylesheet" href="./css/limelight/arrow+bbox.css">
+  <link rel="stylesheet" href="./css/global.css" />
+  <link rel="stylesheet" href="./css/limelight/limelight_box.css" />
+  <link rel="stylesheet" href="./css/limelight/arrow+bbox.css" />
 </head>
 
 <body>
@@ -15,29 +15,22 @@
     <div class="limelight-grid">
 
       <!-- ========================= -->
-      <!-- LINHA 1 — CAMERA LOCAL -->
+      <!-- LINHA 1 — LIME 4 (SÓ STREAM / SEM IA) -->
       <!-- ========================= -->
-      <div class="limelight-row">
+      <div class="limelight-row" id="lime4">
 
-        <div class="camera-box">
-          <video id="localCam" autoplay playsinline muted></video>
+        <div class="camera-box arrow-parent">
+          <!-- Lime 4: apenas exibição do stream -->
+          <img
+            src="http://10.91.63.30:5800/stream.mjpg"
+            alt="Lime 4 Stream"
+            style="width:100%; height:100%; object-fit:cover;"
+          >
+          <!-- NÃO TEM SETA / BBOX AQUI (sem IA) -->
         </div>
 
         <div class="info-box">
           <div class="info-title">Lime 4</div>
-
-          <!-- ALINHADOR -->
-          <div class="offset-container" id="alinhador-lime4">
-            <div class="offset-line">
-              <span class="offset-label">Alinhador (IA):</span>
-              <div class="offset-box"></div>
-            </div>
-            <div class="offset-modes">
-              <span data-mode="0">OFF</span> |
-              <span data-mode="1">ON</span> |
-              <span data-mode="2">AUTO</span>
-            </div>
-          </div>
 
           <!-- YAW -->
           <div class="offset-container" id="yaw-lime4">
@@ -47,8 +40,7 @@
             </div>
             <div class="offset-modes">
               <span data-mode="0">OFF</span> |
-              <span data-mode="1">ON</span> |
-              <span data-mode="2">BALL</span>
+              <span data-mode="1">TAG</span> 
             </div>
           </div>
 
@@ -65,33 +57,24 @@
             </div>
           </div>
 
-          <!-- TESTE 2 -->
-          <div class="offset-container" id="teste2-lime4">
-            <div class="offset-line">
-              <span class="offset-label">Modo Teste 2:</span>
-              <div class="offset-box"></div>
-            </div>
-            <div class="offset-modes">
-              <span data-mode="0">OFF</span> |
-              <span data-mode="1">ON</span> |
-              <span data-mode="2">AUTO</span>
-            </div>
-          </div>
         </div>
       </div>
 
       <!-- ========================= -->
-      <!-- LINHA 2 — LIMELIGHT -->
+      <!-- LINHA 2 — LIME 2+ (COM IA: SETA + BBOX) -->
       <!-- ========================= -->
-      <div class="limelight-row">
+      <div class="limelight-row" id="lime2">
 
         <div class="camera-box arrow-parent">
+          <!-- Lime 2+: exibe stream e recebe seta/bbox via JS -->
           <img
-            src="http://limelight.local:5800/stream.mjpg"
-            alt="Limelight Stream"
+            src="http://10.91.63.200:5800/stream.mjpg"
+            alt="Lime 2+ Stream"
             style="width:100%; height:100%; object-fit:cover;"
           >
-          <div id="arrow" class="hidden"></div>
+          <!-- SETA (IA SOMENTE AQUI) -->
+          <div class="arrow hidden" id="arrow-lime2"></div>
+          <!-- bbox será criado via JS e anexado no parent -->
         </div>
 
         <div class="info-box">
@@ -118,8 +101,7 @@
             </div>
             <div class="offset-modes">
               <span data-mode="0">OFF</span> |
-              <span data-mode="1">ON</span> |
-              <span data-mode="2">BALL</span>
+              <span data-mode="1">BALL</span>
             </div>
           </div>
 
@@ -136,18 +118,6 @@
             </div>
           </div>
 
-          <!-- TESTE 2 -->
-          <div class="offset-container" id="teste2-lime2">
-            <div class="offset-line">
-              <span class="offset-label">Modo Teste 2:</span>
-              <div class="offset-box"></div>
-            </div>
-            <div class="offset-modes">
-              <span data-mode="0">OFF</span> |
-              <span data-mode="1">ON</span> |
-              <span data-mode="2">AUTO</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -155,17 +125,9 @@
   </div>
 
   <!-- JS -->
+  <!-- arrow.js deve estar configurado para buscar SOMENTE /data/lime2 e usar arrow-lime2 -->
   <script src="./js/limelight/arrow.js"></script>
   <script src="./js/limelight/modes.js"></script>
-
-  <!-- CAMERA LOCAL -->
-  <script>
-    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-      .then(stream => {
-        document.getElementById("localCam").srcObject = stream;
-      })
-      .catch(console.error);
-  </script>
 
 </body>
 </html>

@@ -1,36 +1,42 @@
-import cv2
-import threading
 import time
+import threading
+import cv2
 from ultralytics import YOLO
-from flask import Flask, jsonify, Response
+from flask import Flask, jsonify
 from flask_cors import CORS
 
 # =========================
 # CONFIGURAÇÕES
 # =========================
-CAMERA_INDEX = "http://limelight.local:5800"
-CONF_THRESHOLD = 0.5
-MODEL_PATH = "yolov8n.pt"
 
-TX_DEADBAND = 10
-TX_MEDIUM = 60
-TX_STRONG = 120
+# SOMENTE LIME 2+ (IP fixo)
+LIME2_STREAM_URL = "http://10.91.63.200:5800/stream.mjpg"
 
-# =========================
-# VARIÁVEIS COMPARTILHADAS
-# =========================
-latest_frame = None
-latest_tx = None
-latest_bbox = None
+MODEL_PATH = "gamepiece26.pt"
+CONF_THRESHOLD = 0.50
 
-frame_lock = threading.Lock()
-tx_lock = threading.Lock()
+FLASK_HOST = "0.0.0.0"
+FLASK_PORT = 5801
+
+INFER_DT = 0.05          # 20 FPS (estável)
+STALE_TIMEOUT_S = 2.0    # invalida após 2s sem update
+
+REOPEN_COOLDOWN_S = 0.5
+FAILS_BEFORE_REOPEN = 8
+
 running = True
 
 # =========================
-# MODELO
+# ESTADO COMPARTILHADO
 # =========================
-model = YOLO(MODEL_PATH)
+state_lock = threading.Lock()
+latest = {"tx": None, "bbox": None, "_ts": 0.0}
+
+frame_lock = threading.Lock()
+latest_frame = None
+
+cap_status = {"opened": False, "fails": 0, "reopens": 0, "last_ok": 0.0}
+last_infer = 0.0
 
 # =========================
 # FLASK
@@ -38,172 +44,177 @@ model = YOLO(MODEL_PATH)
 app = Flask(__name__)
 CORS(app)
 
-# rota que retorna tx e bbox
+def _valid_payload():
+    now = time.time()
+    with state_lock:
+        if now - latest["_ts"] > STALE_TIMEOUT_S:
+            return {"tx": None, "bbox": None}
+        return {"tx": latest["tx"], "bbox": latest["bbox"]}
+
 @app.route("/data")
-def get_data():
-    with tx_lock:
-        return jsonify({
-            "tx": latest_tx,
-            "bbox": latest_bbox  # None ou [x1, y1, x2, y2]
-        })
+def data_all():
+    # mantém compatível com o que você já estava testando
+    return jsonify({"lime2": _valid_payload()})
 
-# rota de streaming de vídeo (opcional)
-def generate_stream():
-    while True:
-        with frame_lock:
-            if latest_frame is None:
-                continue
-            frame = latest_frame.copy()
-        _, jpeg = cv2.imencode(".jpg", frame)
-        yield (
-            b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n" +
-            jpeg.tobytes() +
-            b"\r\n"
-        )
+@app.route("/data/lime2")
+def data_lime2():
+    return jsonify(_valid_payload())
 
-@app.route("/stream")
-def stream():
-    return Response(
-        generate_stream(),
-        mimetype="multipart/x-mixed-replace; boundary=frame"
-    )
+@app.route("/health")
+def health():
+    with state_lock:
+        ts = latest["_ts"]
+    now = time.time()
+    return jsonify({
+        "lime2": {
+            "age_s": None if ts == 0.0 else round(now - ts, 3),
+            **cap_status
+        }
+    })
 
 def start_server():
-    app.run(host="0.0.0.0", port=5801, debug=False, use_reloader=False)
-
-# =========================
-# THREAD: CÂMERA
-# =========================
-def camera_thread():
-    global latest_frame, running
-
-    cap = cv2.VideoCapture(CAMERA_INDEX)
-    if not cap.isOpened():
-        print("Erro ao abrir a câmera")
-        running = False
-        return
-
-    while running:
-        ret, frame = cap.read()
-        if not ret:
-            continue
-
-        with frame_lock:
-            latest_frame = frame.copy()
-
-    cap.release()
-
-# =========================
-# THREAD: INFERÊNCIA
-# =========================
-def inference_thread():
-    global latest_tx, latest_bbox, running
-
-    while running:
-        with frame_lock:
-            if latest_frame is None:
-                continue
-            frame = latest_frame.copy()
-
-        h, w, _ = frame.shape
-        center_x = w // 2
-
-        results = model(frame, verbose=False)
-
-        tx_value = None
-        bbox = None
-
-        for r in results:
-            for box in r.boxes:
-                conf = float(box.conf[0])
-                if conf < CONF_THRESHOLD:
-                    continue
-
-                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                box_center_x = (x1 + x2) // 2
-
-                tx_value = box_center_x - center_x
-                bbox = [x1, y1, x2, y2]
-                break
-
-        with tx_lock:
-            latest_tx = tx_value
-            latest_bbox = bbox
-
-        time.sleep(0.01)
-
-# =========================
-# DESENHO DA SETA
-# =========================
-def draw_arrow(frame, tx):
-    if tx is None:
-        return
-
-    h, w, _ = frame.shape
-    y = h - 30
-
-    if abs(tx) <= TX_DEADBAND:
-        return
-
-    if abs(tx) >= TX_STRONG:
-        level = 3
-    elif abs(tx) >= TX_MEDIUM:
-        level = 2
-    else:
-        level = 1
-
-    if tx > 0:
-        arrow = "<" * level
-        x = int(w * 0.75)
-    else:
-        arrow = ">" * level
-        x = int(w * 0.10)
-
-    cv2.putText(
-        frame,
-        arrow,
-        (x, y),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        1.8,
-        (0, 0, 255),
-        4
+    app.run(
+        host=FLASK_HOST,
+        port=FLASK_PORT,
+        debug=False,
+        use_reloader=False,
+        threaded=True
     )
 
 # =========================
-# MAIN
+# CAPTURE (THREAD)
 # =========================
-def main():
+def open_capture(url: str) -> cv2.VideoCapture:
+    # CAP_FFMPEG costuma ser mais estável no Windows pra MJPG
+    cap = cv2.VideoCapture(url, cv2.CAP_FFMPEG)
+    try:
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    except Exception:
+        pass
+    return cap
+
+def capture_worker():
     global running, latest_frame
 
-    threading.Thread(target=start_server, daemon=True).start()
-    threading.Thread(target=camera_thread, daemon=True).start()
-    threading.Thread(target=inference_thread, daemon=True).start()
+    cap = None
+    last_open_try = 0.0
+
+    def reopen():
+        nonlocal cap, last_open_try
+        now = time.time()
+        if now - last_open_try < REOPEN_COOLDOWN_S:
+            return
+        last_open_try = now
+
+        if cap is not None:
+            try:
+                cap.release()
+            except Exception:
+                pass
+            cap = None
+
+        cap = open_capture(LIME2_STREAM_URL)
+        cap_status["opened"] = bool(cap is not None and cap.isOpened())
+        cap_status["fails"] = 0
+        cap_status["reopens"] += 1
+
+    reopen()
 
     while running:
+        if cap is None or not cap.isOpened():
+            cap_status["opened"] = False
+            reopen()
+            time.sleep(0.02)
+            continue
+
+        ret, fr = cap.read()
+        if not ret or fr is None:
+            cap_status["fails"] += 1
+            if cap_status["fails"] >= FAILS_BEFORE_REOPEN:
+                cap_status["opened"] = False
+                reopen()
+            time.sleep(0.01)
+            continue
+
+        cap_status["fails"] = 0
+        cap_status["opened"] = True
+        cap_status["last_ok"] = time.time()
+
         with frame_lock:
-            if latest_frame is None:
+            latest_frame = fr
+
+        time.sleep(0.001)
+
+    if cap is not None:
+        cap.release()
+
+# =========================
+# INFERÊNCIA
+# =========================
+def infer_one_frame(model: YOLO, frame):
+    if frame is None:
+        return None, None
+
+    h, w = frame.shape[:2]
+    cx = w // 2
+
+    results = model(frame, verbose=False)
+
+    best = None
+    best_conf = -1.0
+
+    for r in results:
+        for box in r.boxes:
+            conf = float(box.conf[0])
+            if conf < CONF_THRESHOLD:
                 continue
-            frame = latest_frame.copy()
+            if conf > best_conf:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                best = (x1, y1, x2, y2)
+                best_conf = conf
 
-        with tx_lock:
-            tx = latest_tx
-            bbox = latest_bbox
+    if best is None:
+        return None, None
 
-        # desenho da bounding box (apenas no Python)
-        if bbox:
-            x1, y1, x2, y2 = bbox
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    x1, y1, x2, y2 = best
+    tx = ((x1 + x2) // 2) - cx
+    return float(tx), [x1, y1, x2, y2]
 
-        draw_arrow(frame, tx)
+def update_latest(tx, bbox):
+    with state_lock:
+        latest["tx"] = tx
+        latest["bbox"] = bbox
+        latest["_ts"] = time.time()
 
-        with frame_lock:
-            latest_frame = frame.copy()
+def main_loop():
+    global running, last_infer
 
-        time.sleep(0.01)
+    model = YOLO(MODEL_PATH)
+
+    threading.Thread(target=capture_worker, daemon=True).start()
+
+    while running:
+        now = time.time()
+
+        if now - last_infer >= INFER_DT:
+            img = None
+            with frame_lock:
+                if latest_frame is not None:
+                    img = latest_frame.copy()
+
+            if img is not None:
+                last_infer = now
+                tx, bbox = infer_one_frame(model, img)
+                update_latest(tx, bbox)
+
+        time.sleep(0.001)
 
 # =========================
 # START
 # =========================
 if __name__ == "__main__":
-    main()
+    threading.Thread(target=start_server, daemon=True).start()
+    try:
+        main_loop()
+    except KeyboardInterrupt:
+        running = False
