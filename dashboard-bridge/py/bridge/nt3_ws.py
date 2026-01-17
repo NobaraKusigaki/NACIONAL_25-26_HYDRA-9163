@@ -28,9 +28,19 @@ TABLES_AND_KEYS = {
     ],
     "limelight-back": [
         "piece_tx",
+        "ta",
         "piece_distance",
         "has_target",
-        "bbox"
+        "bbox",
+        "hw"
+    ],
+    "limelight-front": [
+        "hw"
+    ],
+    "Modes": [
+        "AimLockLime4",  # 0 OFF | 1 TAG
+        "AimLockLime2",  # 0 OFF | 1 TAG
+        "AlignLime2"     # 0 OFF | 1 ON | 2 AUTO
     ]
 }
 
@@ -56,7 +66,14 @@ def get_table(table_name):
     return NetworkTables.getTable(table_name)
 
 def read_any(table, key):
-    """Tenta ler Number, String, Boolean e NumberArray (bbox)."""
+    # NumberArray primeiro (hw, bbox, etc.)
+    try:
+        arr = table.getNumberArray(key, None)
+        if arr is not None:
+            return list(arr)
+    except Exception:
+        pass
+
     # Number
     try:
         v = table.getNumber(key, None)
@@ -81,15 +98,8 @@ def read_any(table, key):
     except Exception:
         pass
 
-    # NumberArray (ex.: bbox)
-    try:
-        arr = table.getNumberArray(key, None)
-        if arr is not None:
-            return list(arr)
-    except Exception:
-        pass
-
     return None
+
 
 async def poll_and_broadcast():
     """Lê as chaves periodicamente e envia para clients se foram alteradas."""

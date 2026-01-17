@@ -1,13 +1,14 @@
 import time
 import threading
 import cv2
+import math
 from ultralytics import YOLO
 
 # IMPORTA FUNCOES DO SEU RIO2WPILIB
 from limelight.RIO2WPILIB import (
     init_nt,
     rio2wpi_tx,
-    rio2wpi_distance,
+    rio2wpi_ta,          # [NOVO]
     rio2wpi_has_target,
     rio2wpi_bbox,
 )
@@ -16,17 +17,19 @@ from limelight.RIO2WPILIB import (
 # CONFIGURACOES
 # =========================
 
-# SOMENTE LIME 2+ (IP fixo)
 LIME2_STREAM_URL = "http://10.91.63.200:5800/stream.mjpg"
 
-MODEL_PATH = "yolov8n.pt"
-CONF_THRESHOLD = 0.10
+MODEL_PATH = "gamepiece2026.pt"
+CONF_THRESHOLD = 0.40
 
-INFER_DT = 0.05          # 20 FPS (estavel)
-STALE_TIMEOUT_S = 2.0    # invalida apos 2s sem update
+INFER_DT = 0.05
+STALE_TIMEOUT_S = 2.0
 
 REOPEN_COOLDOWN_S = 0.5
 FAILS_BEFORE_REOPEN = 8
+
+# HFOV padrao Limelight
+LIMELIGHT_HFOV_DEG = 59.6
 
 running = True
 
@@ -34,7 +37,7 @@ running = True
 # ESTADO COMPARTILHADO
 # =========================
 state_lock = threading.Lock()
-latest = {"tx": None, "bbox": None, "_ts": 0.0}
+latest = {"tx": None, "ta": None, "bbox": None, "_ts": 0.0}
 
 frame_lock = threading.Lock()
 latest_frame = None
@@ -43,16 +46,14 @@ cap_status = {"opened": False, "fails": 0, "reopens": 0, "last_ok": 0.0}
 last_infer = 0.0
 
 # =========================
-# NETWORKTABLES (RIO)
+# NETWORKTABLES
 # =========================
-# Inicializa UMA vez (nao reinicializa a cada envio)
 init_nt(server="10.91.63.2", table_name="limelight-back")
 
 # =========================
-# CAPTURE (THREAD)
+# CAPTURE
 # =========================
 def open_capture(url: str) -> cv2.VideoCapture:
-    # CAP_FFMPEG costuma ser mais estavel no Windows pra MJPG
     cap = cv2.VideoCapture(url, cv2.CAP_FFMPEG)
     try:
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
@@ -78,10 +79,9 @@ def capture_worker():
                 cap.release()
             except Exception:
                 pass
-            cap = None
 
         cap = open_capture(LIME2_STREAM_URL)
-        cap_status["opened"] = bool(cap is not None and cap.isOpened())
+        cap_status["opened"] = cap.isOpened() if cap else False
         cap_status["fails"] = 0
         cap_status["reopens"] += 1
 
@@ -89,7 +89,6 @@ def capture_worker():
 
     while running:
         if cap is None or not cap.isOpened():
-            cap_status["opened"] = False
             reopen()
             time.sleep(0.02)
             continue
@@ -98,13 +97,11 @@ def capture_worker():
         if not ret or fr is None:
             cap_status["fails"] += 1
             if cap_status["fails"] >= FAILS_BEFORE_REOPEN:
-                cap_status["opened"] = False
                 reopen()
             time.sleep(0.01)
             continue
 
         cap_status["fails"] = 0
-        cap_status["opened"] = True
         cap_status["last_ok"] = time.time()
 
         with frame_lock:
@@ -112,7 +109,7 @@ def capture_worker():
 
         time.sleep(0.001)
 
-    if cap is not None:
+    if cap:
         cap.release()
 
 # =========================
@@ -120,10 +117,13 @@ def capture_worker():
 # =========================
 def infer_one_frame(model: YOLO, frame):
     if frame is None:
-        return None, None
+        return None, None, None
 
     h, w = frame.shape[:2]
-    cx = w // 2
+    cx = w / 2.0
+
+    focal_px = (w / 2.0) / math.tan(math.radians(LIMELIGHT_HFOV_DEG / 2.0))
+    frame_area = w * h
 
     results = model(frame, verbose=False)
 
@@ -141,58 +141,54 @@ def infer_one_frame(model: YOLO, frame):
                 best_conf = conf
 
     if best is None:
-        return None, None
+        return None, None, None
 
     x1, y1, x2, y2 = best
-    tx = ((x1 + x2) // 2) - cx  # px a direita positivo, a esquerda negativo
-    return float(tx), [x1, y1, x2, y2]
 
-def update_latest(tx, bbox):
+    # tx (graus)
+    bx = (x1 + x2) / 2.0
+    dx = bx - cx
+    tx_deg = math.degrees(math.atan(dx / focal_px))
+
+    # ta (%)
+    bbox_area = max(0, (x2 - x1)) * max(0, (y2 - y1))
+    ta = (bbox_area / frame_area) * 100.0
+
+    return tx_deg, ta, [x1, y1, x2, y2]
+
+def update_latest(tx, ta, bbox):
     now = time.time()
     with state_lock:
         latest["tx"] = tx
+        latest["ta"] = ta
         latest["bbox"] = bbox
         latest["_ts"] = now
 
-    has_target = (tx is not None) and (bbox is not None)
+    has_target = tx is not None and bbox is not None
 
-    # Publica sempre o has_target
     rio2wpi_has_target(has_target)
 
-    # Se tem alvo, publica tx e bbox
     if has_target:
         rio2wpi_tx(tx)
+        rio2wpi_ta(ta)
         rio2wpi_bbox(bbox)
 
-        # Distancia: por enquanto NAO calcula -> nao publica
-        # Quando tiver, basta descomentar:
-        # rio2wpi_distance(distancia)
-
 def publish_stale_if_needed():
-    """
-    Se ficar stale por muito tempo, publica has_target=False para o roboRIO nao usar dado velho.
-    """
     now = time.time()
     with state_lock:
         ts = latest["_ts"]
 
-    if ts == 0.0:
-        return
-
-    if (now - ts) > STALE_TIMEOUT_S:
+    if ts != 0.0 and (now - ts) > STALE_TIMEOUT_S:
         rio2wpi_has_target(False)
 
 def main_loop():
     global running, last_infer
 
     model = YOLO(MODEL_PATH)
-
     threading.Thread(target=capture_worker, daemon=True).start()
 
     while running:
         now = time.time()
-
-        # publica stale se necessario (barato)
         publish_stale_if_needed()
 
         if now - last_infer >= INFER_DT:
@@ -203,8 +199,8 @@ def main_loop():
 
             if img is not None:
                 last_infer = now
-                tx, bbox = infer_one_frame(model, img)
-                update_latest(tx, bbox)
+                tx, ta, bbox = infer_one_frame(model, img)
+                update_latest(tx, ta, bbox)
 
         time.sleep(0.001)
 

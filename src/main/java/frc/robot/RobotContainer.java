@@ -1,6 +1,5 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj2.command.*;
@@ -53,25 +52,46 @@ public class RobotContainer {
           );
         }, drivebase)
     );
+
   }
 
   private void configureBindings() {
 
     //#ANGULAR DRIVE COMMANDS
-    controller.triangle().onTrue(
-        drivebase.snapToAngleOnce(Rotation2d.fromDegrees(0)));
 
-    controller.circle().onTrue(
-        drivebase.snapToAngleOnce(Rotation2d.fromDegrees(90)));
+    // controller.triangle().onTrue(
+    //     drivebase.snapToAngleOnce(Rotation2d.fromDegrees(0)));
 
-    controller.cross().onTrue(
-        drivebase.snapToAngleOnce(Rotation2d.fromDegrees(180)));
+    // controller.circle().onTrue(
+    //     drivebase.snapToAngleOnce(Rotation2d.fromDegrees(90)));
 
-    controller.square().onTrue(
-        drivebase.snapToAngleOnce(Rotation2d.fromDegrees(270)));
+    // controller.cross().onTrue(
+    //     drivebase.snapToAngleOnce(Rotation2d.fromDegrees(180)));
+
+    // controller.square().onTrue(
+    //     drivebase.snapToAngleOnce(Rotation2d.fromDegrees(270)));
 
     //#STREAM DECK SYSTEMS COMMANDS
-    
+
+    /* ---------------------------- */
+
+    // #MODOS (Vision/Swerve -> NT)
+
+    controller.square().onTrue(
+      drivebase.toggleAimLockLime4Command()
+    );
+
+    controller.circle().onTrue(
+      drivebase.toggleAimLockLime2Command()
+    );
+
+    controller.triangle().onTrue(
+    Commands.runOnce(() -> drivebase.beginAlignLime2(() -> controller.triangle().getAsBoolean()), drivebase)
+    );
+
+    controller.triangle().onFalse(
+        Commands.runOnce(drivebase::endAlignLime2, drivebase)
+    );
   }
 
   public void updateDashboards() {

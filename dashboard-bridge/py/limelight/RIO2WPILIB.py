@@ -20,6 +20,7 @@ DEFAULT_TABLE = "limelight-back"
 
 # Chaves NT
 KEY_TX = "piece_tx"
+KEY_TA = "ta" 
 KEY_DISTANCE = "piece_distance"
 KEY_HAS_TARGET = "has_target"
 KEY_BBOX = "bbox"  # number array [x1,y1,x2,y2]
@@ -88,6 +89,10 @@ def _ensure():
 def rio2wpi_tx(tx: float):
     _ensure()
     _table.putNumber(KEY_TX, float(tx))
+
+def rio2wpi_ta(ta: float):
+    _ensure()
+    _table.putNumber(KEY_TA, float(ta))
 
 
 def rio2wpi_distance(distancia: float):
