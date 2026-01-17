@@ -144,3 +144,24 @@ html, body {
   font-weight: normal;
   color: #888;
 }
+
+/* ============================= */
+/* TEMP LIMELIGHT  */
+/* ============================= */
+
+.info-footer {
+  margin-top: auto;        
+  width: 85%;
+  padding: 8px 0 10px 0;
+  text-align: left;
+}
+
+.ll-temp {
+  font-size: 0.75rem;
+  color: #bbb;
+}
+
+.ll-temp.warn {
+  color: #ffaa00;
+  font-weight: bold;
+}

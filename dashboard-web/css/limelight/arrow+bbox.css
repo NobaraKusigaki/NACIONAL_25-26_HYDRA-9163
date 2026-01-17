@@ -29,15 +29,15 @@
 
   font-size: 64px;
   font-weight: 900;
-  color: #ff2b2b;
+  color: #ff0000;
 
   z-index: 10;
   pointer-events: none;
   user-select: none;
 
   text-shadow:
-    0 0 6px rgba(0, 0, 0, 0.8),
-    0 0 14px rgba(0, 0, 0, 0.6);
+    0 0 6px rgba(0, 0, 0, 0.6),
+    0 0 14px rgba(0, 0, 0, 0.8);
 }
 
 /* escondida (sem alvo / stale / erro) */
@@ -60,11 +60,26 @@
 .bbox {
   position: absolute;
 
-  border: 2px solid rgba(255, 0, 0, 0.8);
+  border: 2px solid #92e633;
   box-sizing: border-box;
 
   pointer-events: none;
   user-select: none;
 
   z-index: 5; /* abaixo da seta, acima do vídeo */
+}
+
+/* ============================= */
+/* FADE IN / OUT (SETA + BBOX) */
+/* ============================= */
+
+.arrow,
+.bbox {
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out;
+}
+
+.arrow.visible,
+.bbox.visible {
+  opacity: 1;
 }
