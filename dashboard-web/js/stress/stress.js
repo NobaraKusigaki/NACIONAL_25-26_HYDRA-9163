@@ -1,4 +1,4 @@
-const wsUrl = "ws://localhost:5805/nt/dashboard";
+const wsUrl = "ws://localhost:5810/nt/dashboard";
 const socket = new WebSocket(wsUrl);
 
 let nt = {};
@@ -17,47 +17,48 @@ socket.onclose = () => {
 
 socket.onmessage = event => {
   const msg = JSON.parse(event.data);
-
-  
   if (!msg.topic) return;
 
   nt[msg.topic] = msg.value;
-  updateDashboard();
+  requestAnimationFrame(updateDashboard);
 };
 
 function updateDashboard() {
-
   setNum("/RobotStress/batteryVoltage", "battery-voltage", " V", 2);
   setNum("/RobotStress/totalCurrent", "total-current", " A", 1);
   setNum("/RobotStress/drivetrainCurrent", "drivetrain-current", " A", 1);
   setNum("/RobotStress/stressScore", "stress-score", "", 0);
 
-  if (nt["/RobotStress/chassisSpeed"] !== undefined) {
+  const cs = nt["/RobotStress/chassisSpeed"];
+  if (typeof cs === "number" && isFinite(cs)) {
     document.getElementById("chassis-speed").innerText =
-      nt["/RobotStress/chassisSpeed"].toFixed(2) + " m/s";
+      cs.toFixed(2) + " m/s";
   }
 
-  if (nt["/RobotStress/speedScale"] !== undefined) {
+  const ss = nt["/RobotStress/speedScale"];
+  if (typeof ss === "number" && isFinite(ss)) {
     document.getElementById("speed-scale").innerText =
-      Math.round(nt["/RobotStress/speedScale"] * 100) + "%";
+      Math.round(ss * 100) + "%";
   }
 
-  if (nt["/RobotStress/stressLevel"]) {
-    updateStressStatus(nt["/RobotStress/stressLevel"]);
+  const level = nt["/RobotStress/stressLevel"];
+  if (level !== undefined && level !== null) {
+    updateStressStatus(level);
   }
 
   handleBatterySpeedWarning();
 }
 
 function setNum(topic, id, suffix, decimals) {
-  if (nt[topic] === undefined) return;
+  const v = nt[topic];
+  if (typeof v !== "number" || !isFinite(v)) return;
+
   document.getElementById(id).innerText =
-    nt[topic].toFixed(decimals) + suffix;
+    v.toFixed(decimals) + suffix;
 }
 
 function updateStressStatus(level) {
   const box = document.getElementById("stress-status");
-
   box.textContent = level;
   box.className = "";
 
@@ -68,13 +69,11 @@ function updateStressStatus(level) {
 }
 
 function handleBatterySpeedWarning() {
-
   const voltage = nt["/RobotStress/batteryVoltage"];
   const speedScale = nt["/RobotStress/speedScale"];
-
   const warning = document.getElementById("speed-warning");
 
-  if (voltage === undefined || speedScale === undefined) {
+  if (typeof voltage !== "number" || typeof speedScale !== "number") {
     warning.classList.add("hidden");
     return;
   }

@@ -10,6 +10,7 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.revrobotics.spark.SparkMax;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -184,11 +185,53 @@ public class SwerveSubsystem extends SubsystemBase {
   
     if (Math.abs(x) < 0.05) x = 0.0;
     if (Math.abs(y) < 0.05) y = 0.0;
+
+  // --------------------------------------
+  // ALIGN LIMELIGHT 2 - AUTO (FOLLOW BALL)
+  // --------------------------------------
+  if (alignLime2 == AlignMode.AUTO) {
+
+    boolean hasTarget = limelight2.getEntry("has_target").getBoolean(false);
+
+    if (hasTarget) {
+
+      // ---------- ROTATION ----------
+      double yawError = -getLime2PieceTxRadians();
+      double rot = headingPID.calculate(0.0, yawError);
+
+      // ---------- FORWARD (X) ----------
+      double ta = limelight2.getEntry("ta").getDouble(0.0);
+
+      // quanto maior ta, mais perto
+      double forward =
+          Constants.K_AUTO_PIECE_FORWARD * (Constants.TA_TARGET - ta);
+
+      forward = MathUtil.clamp(
+          forward,
+          -Constants.MAX_SPEED,
+          Constants.MAX_SPEED
+      );
+
+    // Aplica controle automático
+    Translation2d autoTranslation = new Translation2d(forward, 0.0);
+
+    double safety = antiTip.calculateSafetyFactor(getPitch(), getRoll());
+    autoTranslation = autoTranslation.times(safety);
+    rot *= safety;
+
+    swerveDrive.drive(autoTranslation, rot, false, false);
+    return; 
+  } else {
+    swerveDrive.drive(new Translation2d(0, 0), 0.0, false, false);
+    return;
+  }
+}
+
   
     Translation2d limited = new Translation2d(x, y);
   
     // -------------------------------
-    // AIM LOCK (SOMENTE ROTAÇÃO)
+    // AIM LOCK 4 (TAG)
     // -------------------------------
     boolean rotationOverridden = false;
   
@@ -197,11 +240,15 @@ public class SwerveSubsystem extends SubsystemBase {
       boolean hasTarget = limelight.getEntry("tv").getDouble(0) == 1;
   
       if (hasTarget) {
-        double yawError = -getLimelightTxRadians(); // sinal corrigido
+        double yawError = getLimelightTxRadians(); // sinal corrigido
         rotation = headingPID.calculate(0.0, yawError);
         rotationOverridden = true;
       }
   
+    // -------------------------------
+    // AIM LOCK 2+ (IA)
+    // -------------------------------
+
     } else if (aimLockLime2 == AimLockMode.TAG) {
   
       boolean hasTarget = limelight2.getEntry("has_target").getBoolean(false);
@@ -224,10 +271,6 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.drive(limited, rotation, false, false);
   }
   
-
-  // =========================================================
-  // AIMLOCK LIMELIGHT 4 API
-  // =========================================================
   public AimLockMode getAimLockLime4() { return aimLockLime4; }
 
   public void setAimLockLime4(AimLockMode mode) {
@@ -249,9 +292,6 @@ public class SwerveSubsystem extends SubsystemBase {
     return Commands.runOnce(this::toggleAimLockLime4, this);
   }
 
-  // =========================================================
-  // RESTANTE DO SEU CÓDIGO (INALTERADO)
-  // =========================================================
   public AimLockMode getAimLockLime2() { return aimLockLime2; }
   
   public void setAimLockLime2(AimLockMode mode) {

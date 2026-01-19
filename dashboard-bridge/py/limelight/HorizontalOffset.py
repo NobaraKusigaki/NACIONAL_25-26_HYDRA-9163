@@ -8,7 +8,7 @@ from ultralytics import YOLO
 from limelight.RIO2WPILIB import (
     init_nt,
     rio2wpi_tx,
-    rio2wpi_ta,          # [NOVO]
+    rio2wpi_ta,
     rio2wpi_has_target,
     rio2wpi_bbox,
 )
@@ -60,6 +60,7 @@ def open_capture(url: str) -> cv2.VideoCapture:
     except Exception:
         pass
     return cap
+
 
 def capture_worker():
     global running, latest_frame
@@ -113,7 +114,7 @@ def capture_worker():
         cap.release()
 
 # =========================
-# INFERENCIA
+# INFERENCIA (SMART TARGET GROUP)
 # =========================
 def infer_one_frame(model: YOLO, frame):
     if frame is None:
@@ -127,34 +128,48 @@ def infer_one_frame(model: YOLO, frame):
 
     results = model(frame, verbose=False)
 
-    best = None
-    best_conf = -1.0
+    centers_x = []
+    areas = []
+    boxes = []
 
     for r in results:
         for box in r.boxes:
             conf = float(box.conf[0])
             if conf < CONF_THRESHOLD:
                 continue
-            if conf > best_conf:
-                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                best = (x1, y1, x2, y2)
-                best_conf = conf
 
-    if best is None:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+
+            bx = (x1 + x2) / 2.0
+            centers_x.append(bx)
+
+            area = max(0, (x2 - x1)) * max(0, (y2 - y1))
+            areas.append(area)
+
+            boxes.append([x1, y1, x2, y2])
+
+    if len(centers_x) == 0:
         return None, None, None
 
-    x1, y1, x2, y2 = best
+    # ===== CENTRO MEDIO DO GRUPO =====
+    avg_x = sum(centers_x) / len(centers_x)
 
-    # tx (graus)
-    bx = (x1 + x2) / 2.0
-    dx = bx - cx
+    dx = avg_x - cx
     tx_deg = math.degrees(math.atan(dx / focal_px))
 
-    # ta (%)
-    bbox_area = max(0, (x2 - x1)) * max(0, (y2 - y1))
-    ta = (bbox_area / frame_area) * 100.0
+    # ===== AREA TOTAL DO GRUPO =====
+    ta = (sum(areas) / frame_area) * 100.0
 
-    return tx_deg, ta, [x1, y1, x2, y2]
+    # ===== BBOX VIRTUAL DO GRUPO =====
+    x1 = int(min(b[0] for b in boxes))
+    y1 = int(min(b[1] for b in boxes))
+    x2 = int(max(b[2] for b in boxes))
+    y2 = int(max(b[3] for b in boxes))
+
+    bbox = [x1, y1, x2, y2]
+
+    return tx_deg, ta, bbox
+
 
 def update_latest(tx, ta, bbox):
     now = time.time()
@@ -165,13 +180,13 @@ def update_latest(tx, ta, bbox):
         latest["_ts"] = now
 
     has_target = tx is not None and bbox is not None
-
     rio2wpi_has_target(has_target)
 
     if has_target:
         rio2wpi_tx(tx)
         rio2wpi_ta(ta)
         rio2wpi_bbox(bbox)
+
 
 def publish_stale_if_needed():
     now = time.time()
@@ -180,6 +195,7 @@ def publish_stale_if_needed():
 
     if ts != 0.0 and (now - ts) > STALE_TIMEOUT_S:
         rio2wpi_has_target(False)
+
 
 def main_loop():
     global running, last_infer
