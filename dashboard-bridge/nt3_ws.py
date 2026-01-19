@@ -22,10 +22,8 @@ TABLES_AND_KEYS = {
         "speedScale",
         "chassisSpeed"
     ],
-    "StreamDeck/MotorTest": [
-        "enable",
-        "direction",
-        "status"
+    "StreamDeck/Intake": [
+        "command"
     ]
 }
 
