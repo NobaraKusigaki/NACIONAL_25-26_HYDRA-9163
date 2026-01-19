@@ -2,13 +2,13 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.Score;
+package frc.robot.subsystems.ScoreSD.Spindexer;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class AngularIntakeManager extends SubsystemBase {
-  /** Creates a new AngularIntakeManager. */
-  public AngularIntakeManager() {}
+public class SpindexerSD extends SubsystemBase {
+  /** Creates a new SpindexerSD. */
+  public SpindexerSD() {}
 
   @Override
   public void periodic() {
