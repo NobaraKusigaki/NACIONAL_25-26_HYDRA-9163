@@ -2,15 +2,21 @@ import asyncio
 import json
 import argparse
 import time
+import math
 from networktables import NetworkTables
 import websockets
+
+# =========================
+# CONFIG
+# =========================
 
 DEFAULT_ROBORIO = "10.91.63.2"
 WS_HOST = "0.0.0.0"
 DEFAULT_WS_PORT = 5810
 WS_PATH = "/nt/dashboard"
 
-# Agora inclui limelight-back
+ENABLE_MOCK_STRESS = True   # <<< DESLIGUE EM PRODUÇÃO
+
 TABLES_AND_KEYS = {
     "RobotStress": [
         "batteryVoltage",
@@ -38,72 +44,114 @@ TABLES_AND_KEYS = {
         "hw"
     ],
     "Modes": [
-        "AimLockLime4",  # 0 OFF | 1 TAG
-        "AimLockLime2",  # 0 OFF | 1 TAG
-        "AlignLime2"     # 0 OFF | 1 ON | 2 AUTO
+        "AimLockLime4",
+        "AimLockLime2",
+        "AlignLime2"
     ]
 }
 
 POLL_INTERVAL = 0.15
 clients = set()
 
+# =========================
+# NETWORKTABLES
+# =========================
+
 def connect_nt(roborio_host):
     print(f"Inicializando NetworkTables -> server={roborio_host}")
     NetworkTables.initialize(server=roborio_host)
+
     waited = 0.0
     while not NetworkTables.isConnected():
         time.sleep(0.1)
         waited += 0.1
         if waited > 10.0:
-            print("Aguardando conexão NT... (continuando mesmo assim)")
+            print("⚠️ NT não confirmou conexão ainda (seguindo mesmo assim)")
             break
+
     if NetworkTables.isConnected():
         print("✅ Conectado ao NetworkTables (NT3)")
     else:
-        print("⚠️ NetworkTables não confirmou conexão ainda; continue e veja se os valores aparecem depois.")
+        print("❌ NT ainda não conectado")
 
-def get_table(table_name):
-    return NetworkTables.getTable(table_name)
+def get_table(name):
+    return NetworkTables.getTable(name)
 
 def read_any(table, key):
-    # NumberArray primeiro (hw, bbox, etc.)
     try:
         arr = table.getNumberArray(key, None)
         if arr is not None:
             return list(arr)
-    except Exception:
+    except:
         pass
 
-    # Number
     try:
         v = table.getNumber(key, None)
         if v is not None:
             return v
-    except Exception:
+    except:
         pass
 
-    # String
     try:
         v = table.getString(key, None)
         if v is not None:
             return v
-    except Exception:
+    except:
         pass
 
-    # Boolean
     try:
         v = table.getBoolean(key, None)
         if v is not None:
             return bool(v)
-    except Exception:
+    except:
         pass
 
     return None
 
+# =========================
+# MOCK ROBOT STRESS
+# =========================
+
+async def mock_robot_stress():
+    table = get_table("RobotStress")
+    t0 = time.time()
+
+    while True:
+        t = time.time() - t0
+
+        battery = max(10.2, 12.6 - t * 0.01)
+        total_current = 60 + 20 * abs(math.sin(t / 2))
+        drive_current = 30 + 15 * abs(math.sin(t))
+        speed_scale = 1.0 if battery > 11.2 else 0.7
+
+        stress_score = int((total_current / 120) * 100)
+
+        if stress_score < 40:
+            level = "LOW"
+        elif stress_score < 65:
+            level = "MEDIUM"
+        elif stress_score < 85:
+            level = "HIGH"
+        else:
+            level = "CRITICAL"
+
+        table.getEntry("batteryVoltage").setDouble(battery)
+        table.getEntry("totalCurrent").setDouble(total_current)
+        table.getEntry("drivetrainCurrent").setDouble(drive_current)
+        table.getEntry("stressScore").setDouble(stress_score)
+        table.getEntry("stressLevel").setString(level)
+        table.getEntry("speedScale").setDouble(speed_scale)
+        table.getEntry("chassisSpeed").setDouble(3.0 * speed_scale)
+
+        await asyncio.sleep(0.5)
+
+# =========================
+# WS CORE
+# =========================
 
 async def poll_and_broadcast():
-    """Lê as chaves periodicamente e envia para clients se foram alteradas."""
     last_values = {}
+
     while True:
         for table_name, keys in TABLES_AND_KEYS.items():
             table = get_table(table_name)
@@ -113,19 +161,19 @@ async def poll_and_broadcast():
 
                 if topic not in last_values or last_values[topic] != val:
                     last_values[topic] = val
-                    payload = {"topic": topic, "value": val}
-                    msg = json.dumps(payload)
+                    msg = json.dumps({"topic": topic, "value": val})
 
-                    to_remove = []
+                    dead = []
                     for ws in clients:
                         try:
                             await ws.send(msg)
-                        except Exception:
-                            to_remove.append(ws)
-                    for ws in to_remove:
+                        except:
+                            dead.append(ws)
+
+                    for ws in dead:
                         clients.discard(ws)
 
-                    print("📣 Enviado:", topic, val)
+                    print("📣", topic, val)
 
         await asyncio.sleep(POLL_INTERVAL)
 
@@ -134,7 +182,6 @@ async def handle_ws(ws):
     clients.add(ws)
 
     try:
-        # snapshot inicial
         for table_name, keys in TABLES_AND_KEYS.items():
             table = get_table(table_name)
             for key in keys:
@@ -142,24 +189,8 @@ async def handle_ws(ws):
                 val = read_any(table, key)
                 await ws.send(json.dumps({"topic": topic, "value": val}))
 
-        async for message in ws:
-            obj = json.loads(message)
-            if obj.get("action") == "put":
-                table = get_table(obj["table"])
-                key = obj["key"]
-                value = obj["value"]
-
-                # aceita array também (para bbox)
-                if isinstance(value, list) and all(isinstance(x, (int, float)) for x in value):
-                    table.putNumberArray(key, value)
-                elif isinstance(value, bool):
-                    table.putBoolean(key, value)
-                elif isinstance(value, (int, float)):
-                    table.putNumber(key, value)
-                else:
-                    table.putString(key, str(value))
-
-                print("📡 PUT:", obj)
+        async for _ in ws:
+            pass
 
     except Exception as e:
         print("WS erro:", e)
@@ -167,19 +198,31 @@ async def handle_ws(ws):
         clients.discard(ws)
         print("🔴 Browser desconectou")
 
+# =========================
+# MAIN
+# =========================
+
 async def main_async(roborio, port):
     connect_nt(roborio)
+
     server = await websockets.serve(handle_ws, WS_HOST, port)
     print(f"WebSocket server ouvindo em ws://localhost:{port}{WS_PATH}")
-    poll_task = asyncio.create_task(poll_and_broadcast())
 
+    tasks = [
+        asyncio.create_task(poll_and_broadcast())
+    ]
+
+    if ENABLE_MOCK_STRESS:
+        print("🧪 MOCK RobotStress ATIVADO")
+        tasks.append(asyncio.create_task(mock_robot_stress()))
+
+    await asyncio.gather(*tasks)
     await server.wait_closed()
-    await poll_task
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--roborio", default=DEFAULT_ROBORIO, help="IP ou hostname do roboRIO")
-    parser.add_argument("--port", type=int, default=DEFAULT_WS_PORT, help="Porta WebSocket")
+    parser.add_argument("--roborio", default=DEFAULT_ROBORIO)
+    parser.add_argument("--port", type=int, default=DEFAULT_WS_PORT)
     args = parser.parse_args()
 
     try:

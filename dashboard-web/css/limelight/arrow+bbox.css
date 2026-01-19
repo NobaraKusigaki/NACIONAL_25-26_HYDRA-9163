@@ -3,10 +3,7 @@
 ===================================================== */
 .arrow-parent {
   position: relative;
-  width: 100%;
 
-  /* NÃO force height:100% aqui.
-     Quem manda na altura é a .camera-box (fixa). */
   overflow: hidden;
 }
 

@@ -1,12 +1,12 @@
-const socket = new WebSocket("ws://localhost:5805/nt/dashboard");
+const deckSocket = new WebSocket("ws://localhost:5810/nt/dashboard");
 
 const buttons = document.querySelectorAll(".sd-button");
 
-socket.onopen = () => {
+deckSocket.onopen = () => {
   console.log("🟢 StreamDeck UI conectada ao WS");
 };
 
-socket.onmessage = (event) => {
+deckSocket.onmessage = (event) => {
   const msg = JSON.parse(event.data);
   if (!msg.topic) return;
 
@@ -40,7 +40,7 @@ buttons.forEach(btn => {
   btn.addEventListener("click", () => {
     const system = btn.dataset.system;
 
-    socket.send(JSON.stringify({
+    deckSocket.send(JSON.stringify({
       action: "put",
       table: `StreamDeck/${system}`,
       key: "command",
