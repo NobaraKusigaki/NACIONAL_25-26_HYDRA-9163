@@ -5,9 +5,6 @@ import time
 from networktables import NetworkTables
 import websockets
 
-# ===============================
-# CONFIGURAÇÕES
-# ===============================
 DEFAULT_ROBORIO = "10.91.63.2"
 WS_HOST = "0.0.0.0"
 DEFAULT_WS_PORT = 5810
@@ -16,9 +13,6 @@ WS_PATH = "/nt/dashboard"
 POLL_INTERVAL = 0.15
 clients = set()
 
-# ===============================
-# TABELAS E CHAVES MONITORADAS
-# ===============================
 TABLES_AND_KEYS = {
     "RobotStress": [
         "batteryVoltage",
@@ -34,9 +28,9 @@ TABLES_AND_KEYS = {
         "direction",
         "status"
     ],
-    # -------------------------------
-    # LIMELIGHT BACK (IA - BALL)
-    # -------------------------------
+    "StreamDeck/Intake": [
+        "command"
+    ],
     "limelight-back": [
         "piece_tx",        # erro angular (graus)
         "ta",              # área do alvo
@@ -45,18 +39,12 @@ TABLES_AND_KEYS = {
         "bbox",            # bounding box p/ UI
         "hw"               # health/watchdog
     ],
-    # -------------------------------
-    # LIMELIGHT FRONT (APRILTAG)
-    # -------------------------------
     "limelight-front": [
         "tx",
         "tv",
         "ta",
         "hw"
     ],
-    # -------------------------------
-    # MODOS DO ROBÔ (UI / CONTROLE)
-    # -------------------------------
     "Modes": [
         "AimLockLime4",    # 0 OFF | 1 TAG
         "AimLockLime2",    # 0 OFF | 1 TAG
@@ -64,9 +52,6 @@ TABLES_AND_KEYS = {
     ]
 }
 
-# ===============================
-# NETWORKTABLES
-# ===============================
 def connect_nt(roborio_host):
     print(f"🔌 Inicializando NetworkTables -> server={roborio_host}")
     NetworkTables.initialize(server=roborio_host)
@@ -87,9 +72,6 @@ def connect_nt(roborio_host):
 def get_table(table_name):
     return NetworkTables.getTable(table_name)
 
-# ===============================
-# LEITURA GENÉRICA (TIPO-AWARE)
-# ===============================
 def read_any(table, key):
     try:
         arr = table.getNumberArray(key, None)
@@ -121,9 +103,7 @@ def read_any(table, key):
 
     return None
 
-# ===============================
-# POLLING + BROADCAST
-# ===============================
+
 async def poll_and_broadcast():
     last_values = {}
 
@@ -154,9 +134,6 @@ async def poll_and_broadcast():
 
         await asyncio.sleep(POLL_INTERVAL)
 
-# ===============================
-# WEBSOCKET HANDLER
-# ===============================
 async def handle_ws(ws):
     print("🟢 Browser conectado:", ws.remote_address)
     clients.add(ws)
@@ -195,9 +172,6 @@ async def handle_ws(ws):
         clients.discard(ws)
         print("🔴 Browser desconectou")
 
-# ===============================
-# MAIN
-# ===============================
 async def main_async(roborio, port):
     connect_nt(roborio)
 
