@@ -6,37 +6,38 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class StreamDeckMotorController extends SubsystemBase {
 
-    private final StringSubscriber commandSub;
-    private String lastCommand = "STOP";
-    private final MotorTestSubsystem motor;
+    // private final StringSubscriber commandSub;
+    // private String lastCommand = "STOP";
+    // // private final MotorTestSubsystem motor;
 
-    public StreamDeckMotorController(MotorTestSubsystem motor) {
-        this.motor = motor;
+    // public StreamDeckMotorController(MotorTestSubsystem motor) {
+    //     this.motor = motor;
 
-        commandSub = NetworkTableInstance.getDefault()
-                .getStringTopic("/StreamDeck/motorCommand")
-                .subscribe("STOP");
-    }
+    //     commandSub = NetworkTableInstance.getDefault()
+    //             .getStringTopic("/StreamDeck/motorCommand")
+    //             .subscribe("STOP");
+    // }
 
     @Override
     public void periodic() {
-        String cmd = commandSub.get();
+        // String cmd = commandSub.get();
         
-        if (cmd.equals(lastCommand)) return;
-        lastCommand = cmd;
+        // if (cmd.equals(lastCommand)) return;
+        // lastCommand = cmd;
 
-        switch (cmd) {
-            case "FORWARD": 
-            motor.forward(); 
-            break;
+        // switch (cmd) {
+        //     case "FORWARD": 
+        //     motor.forward(); 
+        //     break;
             
-            case "REVERSE": 
-            motor.reverse(); 
-            break;
+        //     case "REVERSE": 
+        //     motor.reverse(); 
+        //     break;
             
-            default: 
-            motor.stop(); 
-            break;
-        }
+        //     default: 
+        //     motor.stop(); 
+        //     break;
+    // }
+// }
 }
 }
