@@ -9,7 +9,6 @@ import frc.robot.Dashboards.RobotStress.DashboardPublisher;
 import frc.robot.Dashboards.RobotStress.RobotStressController;
 import frc.robot.Dashboards.RobotStress.RobotStressData;
 import frc.robot.Dashboards.RobotStress.RobotStressMonitor;
-import frc.robot.subsystems.Score.MotorTestSubsystem;
 import frc.robot.subsystems.Score.StreamDeckMotorController;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
@@ -19,11 +18,11 @@ public class RobotContainer {
 
   private final CommandPS5Controller controller = new CommandPS5Controller(0);
 
-  private final MotorTestSubsystem motorTestSubsystem =
-      new MotorTestSubsystem(20);
+  // private final MotorTestSubsystem motorTestSubsystem =
+  //     new MotorTestSubsystem(20);
 
-  private final StreamDeckMotorController streamDeckMotor =
-      new StreamDeckMotorController(motorTestSubsystem);
+  // private final StreamDeckMotorController streamDeckMotor =
+  //     new StreamDeckMotorController(motorTestSubsystem);
 
   private final SwerveSubsystem drivebase =
       new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
