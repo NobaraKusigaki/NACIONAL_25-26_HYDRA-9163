@@ -2,13 +2,13 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.Score;
+package frc.robot.subsystems.ScoreSD.Climb;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class SpindexerManager extends SubsystemBase {
-  /** Creates a new SpindexerManager. */
-  public SpindexerManager() {}
+public class ClimbSubsystem extends SubsystemBase {
+  /** Creates a new ClimbSubsystem. */
+  public ClimbSubsystem() {}
 
   @Override
   public void periodic() {
