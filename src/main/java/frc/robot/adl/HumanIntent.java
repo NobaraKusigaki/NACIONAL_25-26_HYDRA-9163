@@ -1,22 +1,15 @@
 package frc.robot.adl;
-
 import edu.wpi.first.wpilibj.Timer;
 
-/**
- * HumanIntent representa O QUE o humano quer que o robô faça,
- * e NÃO como isso será executado.
- *
- * Esta classe é a base do ADL (Action Decision Layer).
- */
 public final class HumanIntent {
     public enum Type {
-        ACQUIRE_PIECE,   // Quero pegar uma peça
-        SCORE_PIECE,     // Quero pontuar uma peça
-        MOVE_TO_ZONE,    // Quero ir para uma área do campo
-        ESCAPE,          // Quero sair de uma situação perigosa
-        CLIMB,           // Quero escalar
-        HOLD_POSITION,   // Quero manter posição
-        ABORT            // Quero cancelar tudo imediatamente
+        ACQUIRE_PIECE,   // pegar uma peça
+        SCORE_PIECE,     // pontuar uma peça
+        MOVE_TO_ZONE,    // ir para uma área do campo
+        ESCAPE,          // sair de uma situação perigosa
+        CLIMB,           // escalar
+        HOLD_POSITION,   // manter posição
+        ABORT            // cancelar imediatamente
     }
 
     public enum GameZone {
@@ -31,14 +24,8 @@ public final class HumanIntent {
 
     private final Type type;
     private final GameZone targetZone;
-
-    // Prioridade da intenção (0 - 1)
     private final double urgency;
-
-    // Se a intenção depende de visão válida
     private final boolean requiresVision;
-
-    // Momento em que a intenção foi criada
     private final double timestamp;
 
     private HumanIntent(
