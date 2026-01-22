@@ -29,9 +29,15 @@ public final class Constants {
     public static final int INTAKE_FOLLOWER_ID = 0;
   }
 
-  public static class SpinConstants{
-    public static final int SPINDEXER_ID = 0;
-  }
+  public static class PreShooterConstants{
 
+    public static final int LEADER_ID = 0;
+    public static final int FOLLOWER_ID = 0;
+    
+  }
+  public static class ADLManager{
+    public static final double MIN_DECISION_INTERVAL = 0.15;
+  }
   
+
 }
