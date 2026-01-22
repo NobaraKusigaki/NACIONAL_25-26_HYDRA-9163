@@ -7,9 +7,13 @@ package frc.robot;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoMode;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.cscore.VideoMode;
 
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -37,12 +41,18 @@ public class Robot extends LoggedRobot {
       Logger.addDataReceiver(new WPILOGWriter("/U/logs"));
       Logger.addDataReceiver(new NT4Publisher());
     }
+
 //     Logger.start();
 //     try {
 //      Logger.start();
 //  } catch (Exception e) {
 //      e.printStackTrace(); 1
 //  }
+
+    UsbCamera cam = CameraServer.startAutomaticCapture(0);
+
+    cam.setResolution(160, 120);
+    cam.setFPS(20);
   }
 
   @Override
