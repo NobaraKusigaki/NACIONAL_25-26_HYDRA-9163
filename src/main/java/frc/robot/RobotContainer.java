@@ -57,7 +57,7 @@ public class RobotContainer {
 
           drivebase.drive(
               new Translation2d(
-                  -controller.getLeftY() * speed,
+                  controller.getLeftY() * speed,
                   -controller.getLeftX() * speed
               ),
               controller.getRightX() * speed

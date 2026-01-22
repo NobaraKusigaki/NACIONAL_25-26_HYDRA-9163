@@ -17,7 +17,7 @@ from limelight.RIO2WPILIB import (
 # CONFIGURACOES
 # =========================
 
-LIME2_STREAM_URL = "http://10.91.63.200:5800/stream.mjpg"
+LIME2_STREAM_URL = "http://10.91.63.2:1181/?action=stream"
 
 MODEL_PATH = "gamepiece2026.pt"
 CONF_THRESHOLD = 0.40
