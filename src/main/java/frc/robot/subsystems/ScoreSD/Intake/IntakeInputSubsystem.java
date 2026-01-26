@@ -19,7 +19,7 @@ public class IntakeInputSubsystem extends SubsystemBase {
 
     private final SparkMax intakeFollowerMotor = 
     new SparkMax(Constants.IntakeConstants.INTAKE_FOLLOWER_ID, MotorType.kBrushed);
-  
+
     public IntakeInputSubsystem() {
 
         SparkMaxConfig leaderConfig = new SparkMaxConfig();
@@ -38,7 +38,7 @@ public class IntakeInputSubsystem extends SubsystemBase {
             ResetMode.kResetSafeParameters, 
             PersistMode.kPersistParameters);
 
-       intakeFollowerMotor.configure(
+    intakeFollowerMotor.configure(
         followerConfig, 
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);     
@@ -53,9 +53,9 @@ public class IntakeInputSubsystem extends SubsystemBase {
         intakeLeaderMotor.stopMotor();
     }
 
-  @Override
-  public void periodic() {
+@Override
+public void periodic() {
     // This method will be called once per scheduler run
-  }
+}
 
 }
