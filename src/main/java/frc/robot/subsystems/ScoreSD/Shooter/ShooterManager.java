@@ -2,13 +2,13 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.ScoreSD.Angular;
+package frc.robot.subsystems.ScoreSD;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class AngularSubsystem extends SubsystemBase {
-  /** Creates a new AngularIntakeSubsystem. */
-  public AngularSubsystem() {}
+public class ShooterManager extends SubsystemBase {
+  /** Creates a new ShooterManager. */
+  public ShooterManager() {}
 
   @Override
   public void periodic() {

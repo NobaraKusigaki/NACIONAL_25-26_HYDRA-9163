@@ -8,6 +8,9 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.MathUtil;
@@ -53,6 +56,12 @@ public class SwerveSubsystem extends SubsystemBase {
 
   private final SlewLimiter xLimiter = new SlewLimiter(3.0, Constants.LOOP_TIME);
   private final SlewLimiter yLimiter = new SlewLimiter(3.0, Constants.LOOP_TIME);
+  private final SlewLimiter rotLimiter = new SlewLimiter(6.0, Constants.LOOP_TIME);
+
+
+  private SwerveSetpointGenerator setpointGenerator;
+  private SwerveSetpoint lastSetpoint;
+  private double lastSetpointTime;
 
   private final StructArrayPublisher<SwerveModuleState> desiredPub;
   private final StructPublisher<Rotation2d> rotationPub;
@@ -140,11 +149,29 @@ public class SwerveSubsystem extends SubsystemBase {
       throw new RuntimeException(e);
     }
 
+    // ===== MELHORIAS YAGSL 2026 =====
     swerveDrive.setHeadingCorrection(false);
     swerveDrive.setCosineCompensator(false);
-    swerveDrive.setAngularVelocityCompensation(false, false, 0.0);
+    swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
 
     headingPID.enableContinuousInput(-Math.PI, Math.PI);
+
+    try {
+      setpointGenerator =
+          new SwerveSetpointGenerator(
+              RobotConfig.fromGUISettings(),
+              swerveDrive.getMaximumChassisAngularVelocity());
+
+      lastSetpoint =
+          new SwerveSetpoint(
+              new ChassisSpeeds(),
+              swerveDrive.getStates(),
+              DriveFeedforwards.zeros(swerveDrive.getModules().length));
+
+      lastSetpointTime = Timer.getFPGATimestamp();
+    } catch (Exception e) {
+      DriverStation.reportError("Erro SetpointGenerator", e.getStackTrace());
+    }
 
     setupPathPlanner();
     RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroWithAlliance));
@@ -156,12 +183,7 @@ public class SwerveSubsystem extends SubsystemBase {
     aimLockLime4Pub = nt.getIntegerTopic(TOPIC_AIMLOCK_LIME4).publish();
     aimLockLime2Pub = nt.getIntegerTopic(TOPIC_AIMLOCK_LIME2).publish();
     alignLime2Pub   = nt.getIntegerTopic(TOPIC_ALIGN_LIME2).publish();
-
-    aimLockLime4Pub.set(aimLockLime4.code);
-    aimLockLime2Pub.set(aimLockLime2.code);
-    alignLime2Pub.set(alignLime2.code);
   }
-
   // =========================================================
   // PERIODIC
   // =========================================================
@@ -182,52 +204,38 @@ public class SwerveSubsystem extends SubsystemBase {
 
     double x = xLimiter.calculate(translation.getX());
     double y = yLimiter.calculate(translation.getY());
-  
+    double rot = rotLimiter.calculate(rotation);
+
     if (Math.abs(x) < 0.05) x = 0.0;
     if (Math.abs(y) < 0.05) y = 0.0;
+    if (Math.abs(rot) < 0.05) rot = 0.0;
 
-  // --------------------------------------
-  // ALIGN LIMELIGHT 2 - AUTO (FOLLOW BALL)
-  // --------------------------------------
-  if (alignLime2 == AlignMode.AUTO) {
+    // -------- ALIGN LIMELIGHT 2 (AUTO) --------
+    if (alignLime2 == AlignMode.AUTO) {
+      boolean hasTarget = limelight2.getEntry("has_target").getBoolean(false);
+      if (hasTarget) {
+        double yawError = -getLime2PieceTxRadians();
+        double rotAuto = headingPID.calculate(0.0, yawError);
 
-    boolean hasTarget = limelight2.getEntry("has_target").getBoolean(false);
+        double ta = limelight2.getEntry("ta").getDouble(0.0);
+        double forward =
+            Constants.K_AUTO_PIECE_FORWARD * (Constants.TA_TARGET - ta);
 
-    if (hasTarget) {
+        forward = MathUtil.clamp(forward, -Constants.MAX_SPEED, Constants.MAX_SPEED);
 
-      // ---------- ROTATION ----------
-      double yawError = -getLime2PieceTxRadians();
-      double rot = headingPID.calculate(0.0, yawError);
+        Translation2d autoTranslation = new Translation2d(forward, 0.0);
+        double safety = antiTip.calculateSafetyFactor(getPitch(), getRoll());
+        autoTranslation = autoTranslation.times(safety);
+        rotAuto *= safety;
 
-      // ---------- FORWARD (X) ----------
-      double ta = limelight2.getEntry("ta").getDouble(0.0);
+        executeSetpoint(autoTranslation, rotAuto);
+        return;
+      } else {
+        executeSetpoint(new Translation2d(), 0.0);
+        return;
+      }
+    }
 
-      // quanto maior ta, mais perto
-      double forward =
-          Constants.K_AUTO_PIECE_FORWARD * (Constants.TA_TARGET - ta);
-
-      forward = MathUtil.clamp(
-          forward,
-          -Constants.MAX_SPEED,
-          Constants.MAX_SPEED
-      );
-
-    // Aplica controle automático
-    Translation2d autoTranslation = new Translation2d(forward, 0.0);
-
-    double safety = antiTip.calculateSafetyFactor(getPitch(), getRoll());
-    autoTranslation = autoTranslation.times(safety);
-    rot *= safety;
-
-    swerveDrive.drive(autoTranslation, rot, false, false);
-    return; 
-  } else {
-    swerveDrive.drive(new Translation2d(0, 0), 0.0, false, false);
-    return;
-  }
-}
-
-  
     Translation2d limited = new Translation2d(x, y);
   
     // -------------------------------
@@ -265,12 +273,37 @@ public class SwerveSubsystem extends SubsystemBase {
     limited = limited.times(safety);
   
     if (rotationOverridden) {
-      rotation *= safety;
-    }
+      rot = rotation;
+}
     
-    swerveDrive.drive(limited, rotation, false, false);
+   executeSetpoint(limited, rot);
   }
   
+  private void executeSetpoint(Translation2d translation, double rotation) {
+
+    ChassisSpeeds target =
+        ChassisSpeeds.fromFieldRelativeSpeeds(
+            translation.getX(),
+            translation.getY(),
+            rotation,
+            getHeading());
+
+    double now = Timer.getFPGATimestamp();
+    double dt = now - lastSetpointTime;
+
+    SwerveSetpoint next =
+        setpointGenerator.generateSetpoint(lastSetpoint, target, dt);
+
+    swerveDrive.drive(
+        next.robotRelativeSpeeds(),
+        next.moduleStates(),
+        next.feedforwards().linearForces());
+
+    lastSetpoint = next;
+    lastSetpointTime = now;
+  }
+
+
   public AimLockMode getAimLockLime4() { return aimLockLime4; }
 
   public void setAimLockLime4(AimLockMode mode) {
