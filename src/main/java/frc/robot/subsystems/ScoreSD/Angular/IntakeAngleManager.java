@@ -10,8 +10,8 @@ import frc.robot.Constants;
 public class IntakeAngleManager extends SubsystemBase {
 
     public enum IntakeAnglePosition {
-        HOME,   
-        INTAKE   
+        HOME,    
+        INTAKE  
     }
 
     private final IntakeAngleSubsystem subsystem;
@@ -78,7 +78,6 @@ public class IntakeAngleManager extends SubsystemBase {
         subsystem.stop();
     }
 
-
     private void moveTo(double angleDeg) {
         targetAngleDeg = angleDeg;
         moving = true;
@@ -104,6 +103,7 @@ public class IntakeAngleManager extends SubsystemBase {
             -Constants.IntakeConstants.ANGLE_MAX_OUTPUT
         );
 
+        // rampa simples (protege mecânica)
         double ramp = 0.03;
         output = lastOutput +
             Math.max(Math.min(output - lastOutput, ramp), -ramp);

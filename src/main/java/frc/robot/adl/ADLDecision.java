@@ -26,6 +26,7 @@ public class ADLDecision {
             );
         }
 
+        // Visão insegura → HOLD
         if (intent.requiresVision() && !context.canUseVision()) {
             return DecisionResult.hold(
                 currentState,
@@ -33,6 +34,7 @@ public class ADLDecision {
             );
         }
 
+        // Stress alto → limita ações
         if (!context.isRobotHealthy()
                 && intent.getUrgency() < 0.9) {
             return DecisionResult.reject(
@@ -41,6 +43,7 @@ public class ADLDecision {
             );
         }
 
+        // Endgame → só aceita climb
         if (context.endgame
                 && intent.getType() != HumanIntent.Type.CLIMB) {
             return DecisionResult.reject(
@@ -56,6 +59,7 @@ public class ADLDecision {
             );
         }
 
+        // ===== Decisão principal =====
         switch (intent.getType()) {
 
             case ACQUIRE_PIECE:

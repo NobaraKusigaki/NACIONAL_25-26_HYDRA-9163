@@ -17,20 +17,24 @@ public class IntakeRollerSubsystem extends SubsystemBase {
 
     public IntakeRollerSubsystem() {
 
-        SparkMaxConfig leaderConfig = new SparkMaxConfig();
-        leaderConfig
+        SparkMaxConfig config = new SparkMaxConfig();
+        config
             .idleMode(IdleMode.kBrake)
             .smartCurrentLimit(40);
 
         leader.configure(
-            leaderConfig,
+            config,
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters
         );
     }
 
-    public void setSpd(double power) {
-        leader.set(power);
+    public void intake() {
+        leader.set(Constants.IntakeConstants.INTAKE_POWER);
+    }
+
+    public void outtake() {
+        leader.set(Constants.IntakeConstants.OUTTAKE_POWER);
     }
 
     public void stop() {

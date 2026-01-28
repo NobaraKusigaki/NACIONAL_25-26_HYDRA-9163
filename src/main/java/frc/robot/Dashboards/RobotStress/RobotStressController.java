@@ -1,7 +1,7 @@
 package frc.robot.Dashboards.RobotStress;
 public class RobotStressController {
 
-    private double maxAllowedSpeedMps = 3.6; // default (12 ft/s)
+    private double maxAllowedSpeedMps = 3.6; 
     private boolean reduced = false;
 
     public void update(RobotStressData data) {
@@ -33,7 +33,7 @@ public class RobotStressController {
     }
 
     public double getSpeedScale() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getSpeedScale'");
+        return Math.min(maxAllowedSpeedMps / 3.6, 1.0);
     }
+    
 }

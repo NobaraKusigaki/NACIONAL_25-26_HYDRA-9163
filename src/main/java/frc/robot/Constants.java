@@ -26,23 +26,35 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int INTAKE_LEADER_ID = 0;
-    public static final int INTAKE_FOLLOWER_ID = 0;
-    public static final double ANGLE_KP = 0;
+    public static final int INTAKE_LEADER_ID = 10;
+
+    public static final int ANGLE_MOTOR_ID = 9;
+    public static final DutyCycle ANGLE_ENCODER_ID = null;
+    
+    public static final int MIN_ANGLE_DEG = 0;
+    public static final double MAX_ANGLE_DEG = 0;
+    
+    public static final double ANGLE_KP = 0.15;
     public static final double ANGLE_KI = 0;
-    public static final double ANGLE_KD = 0;
-    public static final double ANGLE_TOLERANCE_DEG = 0;
-    public static final double ANGLE_KS = 0;
-    public static final double ANGLE_KG = 0;
+    public static final double ANGLE_KD = 0.001;
+    
+    public static final double ANGLE_TOLERANCE_DEG = 1;
+    
+    public static final double ANGLE_KS = 0.5;
+    public static final double ANGLE_KG = 0.28;
     public static final double ANGLE_KV = 0;
     public static final double ANGLE_KA = 0;
+    
     public static final String PREF_ENCODER_OFFSET = null;
+    
     public static final double INTAKE_ANGLE_DEG = 0;
     public static final double HOME_ANGLE_DEG = 0;
+    
     public static final double ANGLE_MAX_OUTPUT = 0;
-    public static final int ANGLE_MOTOR_ID = 0;
-    public static final DutyCycle ANGLE_ENCODER_ID = null;
 
+    public static final double INTAKE_POWER = 0;
+
+    public static final double OUTTAKE_POWER = 0;
   }
 
   public static class PreShooterConstants{
@@ -51,25 +63,8 @@ public final class Constants {
     public static final int FOLLOWER_ID = 0;
     
   }
-
   public static class ADLManager{
     public static final double MIN_DECISION_INTERVAL = 0.15;
-  }
-
-  public static class Climb {
-
-    public static final int LEFT_MOTOR_ID = 0;
-    public static final int RIGHT_MOTOR_ID = 0;
-    public static final double KP = 0;
-    public static final double KI = 0;
-    public static final double KD = 0;
-    public static final double TOLERANCE = 0;
-    public static final double EXTENDED_POS = 0;
-    public static final double RETRACTED_POS = 0;
-    public static final double MAX_OUTPUT = 0;
-    public static final String MIN_POS_KEY = null;
-    public static final String MAX_POS_KEY = null;
-
   }
   
 

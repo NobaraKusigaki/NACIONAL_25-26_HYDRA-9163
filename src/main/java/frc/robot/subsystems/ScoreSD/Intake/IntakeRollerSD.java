@@ -1,43 +1,43 @@
 package frc.robot.subsystems.ScoreSD.Intake;
 
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringSubscriber;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class IntakeRollerSD extends SubsystemBase {
 
-    private final IntakeManager intakeManager;
+    private final IntakeManager manager;
     private final StringSubscriber commandSub;
 
-    private String lastCommand = "IDLE";
+    private String lastCmd = "";
 
-    public IntakeRollerSD(IntakeManager intakeManager) {
-        this.intakeManager = intakeManager;
+    public IntakeRollerSD(IntakeManager manager) {
+        this.manager = manager;
 
         commandSub = NetworkTableInstance.getDefault()
             .getStringTopic("/StreamDeck/Intake/command")
-            .subscribe("IDLE");
+            .subscribe("STOP");
     }
 
     @Override
     public void periodic() {
-        String cmd = commandSub.get();
 
-        if (cmd.equals(lastCommand)) return;
-        lastCommand = cmd;
+        String cmd = commandSub.get();
+        if (cmd.equals(lastCmd)) return;
+        lastCmd = cmd;
 
         switch (cmd) {
-            case "INTAKE":
-                intakeManager.setState(IntakeManager.IntakeState.INTAKING);
+
+            case "ARM":
+                manager.armIntake();
                 break;
 
             case "OUTTAKE":
-                intakeManager.setState(IntakeManager.IntakeState.OUTTAKING);
+                manager.forceOuttake();
                 break;
 
-            case "IDLE":
+            case "STOP":
             default:
-                intakeManager.setState(IntakeManager.IntakeState.IDLE);
+                manager.stop();
                 break;
         }
     }

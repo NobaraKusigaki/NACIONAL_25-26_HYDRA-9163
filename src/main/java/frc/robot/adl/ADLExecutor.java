@@ -1,8 +1,8 @@
 package frc.robot.adl;
 
-import frc.robot.subsystems.ScoreSD.Climb.ClimbManager;
 import frc.robot.subsystems.ScoreSD.Intake.IntakeManager;
 import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
+import frc.robot.subsystems.ScoreSD.Climb.ClimbManager;
 
 public class ADLExecutor {
 
@@ -25,8 +25,8 @@ public class ADLExecutor {
         switch (state) {
 
             case ACQUIRING:
-                intake.setState(IntakeManager.IntakeState.INTAKING);
-                intakeAngle.togglePosition();
+                intake.armIntake();             
+                intakeAngle.togglePosition();  
                 break;
 
             case SCORING:
@@ -34,6 +34,7 @@ public class ADLExecutor {
                 break;
 
             case CLIMBING:
+                intake.disable("Climb ativo");
                 climb.togglePosition();
                 break;
 
@@ -42,7 +43,7 @@ public class ADLExecutor {
                 break;
 
             case EMERGENCY:
-                intake.stop();
+                intake.disable("Emergência");
                 climb.stop();
                 break;
 

@@ -58,7 +58,6 @@ public class SwerveSubsystem extends SubsystemBase {
   private final SlewLimiter yLimiter = new SlewLimiter(3.0, Constants.LOOP_TIME);
   private final SlewLimiter rotLimiter = new SlewLimiter(6.0, Constants.LOOP_TIME);
 
-
   private SwerveSetpointGenerator setpointGenerator;
   private SwerveSetpoint lastSetpoint;
   private double lastSetpointTime;
@@ -138,7 +137,9 @@ public class SwerveSubsystem extends SubsystemBase {
   private static final String TOPIC_AIMLOCK_LIME2 = "/Modes/AimLockLime2";
   private static final String TOPIC_ALIGN_LIME2   = "/Modes/AlignLime2";
 
-
+  // =========================================================
+  // CONSTRUTOR
+  // =========================================================
   public SwerveSubsystem(File directory) {
     try {
       swerveDrive =
