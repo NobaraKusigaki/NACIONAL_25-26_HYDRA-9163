@@ -43,8 +43,6 @@ public final class Constants {
     public static final int ANGLE_MOTOR_ID = 0;
     public static final DutyCycle ANGLE_ENCODER_ID = null;
 
-    
-
   }
 
   public static class PreShooterConstants{
@@ -53,8 +51,25 @@ public final class Constants {
     public static final int FOLLOWER_ID = 0;
     
   }
+
   public static class ADLManager{
     public static final double MIN_DECISION_INTERVAL = 0.15;
+  }
+
+  public static class Climb {
+
+    public static final int LEFT_MOTOR_ID = 0;
+    public static final int RIGHT_MOTOR_ID = 0;
+    public static final double KP = 0;
+    public static final double KI = 0;
+    public static final double KD = 0;
+    public static final double TOLERANCE = 0;
+    public static final double EXTENDED_POS = 0;
+    public static final double RETRACTED_POS = 0;
+    public static final double MAX_OUTPUT = 0;
+    public static final String MIN_POS_KEY = null;
+    public static final String MAX_POS_KEY = null;
+
   }
   
 

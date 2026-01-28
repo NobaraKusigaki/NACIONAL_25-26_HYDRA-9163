@@ -1,90 +1,53 @@
 package frc.robot.adl;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.ScoreSD.Climb.ClimbManager;
 import frc.robot.subsystems.ScoreSD.Intake.IntakeManager;
-import frc.robot.adl.ADLManager;
 import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
 
-public class ADLExecutor extends SubsystemBase {
-
-    private final ADLManager adlManager;
+public class ADLExecutor {
 
     private final IntakeManager intake;
     private final IntakeAngleManager intakeAngle;
-
-    private ADLState lastState = ADLState.IDLE;
+    private final ClimbManager climb;
 
     public ADLExecutor(
-        ADLManager adlManager,
         IntakeManager intake,
-        IntakeAngleManager intakeAngle
+        IntakeAngleManager intakeAngle,
+        ClimbManager climb
     ) {
-        this.adlManager = adlManager;
         this.intake = intake;
         this.intakeAngle = intakeAngle;
+        this.climb = climb;
     }
 
-    @Override
-    public void periodic() {
+    public void execute(ADLState state) {
 
-        ADLState current = adlManager.getCurrentState();
-
-        if (current == lastState) return;
-        lastState = current;
-
-        switch (current) {
-
-            case IDLE:
-                stopAll();
-                break;
+        switch (state) {
 
             case ACQUIRING:
-                executeAcquire();
-                break;
-
-            case MOVING:
-                prepareForMovement();
+                intake.setState(IntakeManager.IntakeState.INTAKING);
+                intakeAngle.togglePosition();
                 break;
 
             case SCORING:
-                prepareForScoring();
+                intake.stop();
                 break;
 
             case CLIMBING:
-                stopAll();
+                climb.togglePosition();
+                break;
+
+            case IDLE:
+                intake.stop();
                 break;
 
             case EMERGENCY:
-                emergencyStop();
+                intake.stop();
+                climb.stop();
                 break;
 
             default:
-                stopAll();
                 break;
         }
-    }
-
-    private void executeAcquire() {
-        intakeAngle.togglePosition(); 
-        intake.setState(IntakeManager.IntakeState.INTAKING);
-    }
-
-    private void prepareForMovement() {
-        intake.stop();
-        intakeAngle.togglePosition(); 
-    }
-
-    private void prepareForScoring() {
-        intake.stop();
-        intakeAngle.togglePosition(); 
-    }
-
-    private void emergencyStop() {
-        stopAll();
-    }
-
-    private void stopAll() {
-        intake.stop();
-        intakeAngle.stop();
     }
 }

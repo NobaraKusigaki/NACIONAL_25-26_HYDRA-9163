@@ -138,9 +138,7 @@ public class SwerveSubsystem extends SubsystemBase {
   private static final String TOPIC_AIMLOCK_LIME2 = "/Modes/AimLockLime2";
   private static final String TOPIC_ALIGN_LIME2   = "/Modes/AlignLime2";
 
-  // =========================================================
-  // CONSTRUTOR
-  // =========================================================
+
   public SwerveSubsystem(File directory) {
     try {
       swerveDrive =
@@ -149,7 +147,6 @@ public class SwerveSubsystem extends SubsystemBase {
       throw new RuntimeException(e);
     }
 
-    // ===== MELHORIAS YAGSL 2026 =====
     swerveDrive.setHeadingCorrection(false);
     swerveDrive.setCosineCompensator(false);
     swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
