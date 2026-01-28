@@ -1,91 +1,97 @@
-// package frc.robot.adl;
-// import edu.wpi.first.networktables.NetworkTableInstance;
-// import edu.wpi.first.networktables.StringPublisher;
-// import edu.wpi.first.wpilibj.Timer;
-// import frc.robot.Constants;
+package frc.robot.adl;
 
-// public class ADLManager {
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.wpilibj.Timer;
+import frc.robot.Constants;
 
-//     private ADLState currentState = ADLState.IDLE;
+public class ADLManager {
 
-//     private final HumanIntentSource intentSource;
+    private ADLState currentState = ADLState.IDLE;
 
-//     private DecisionResult lastDecision = null;
-//     private double lastDecisionTime = 0.0;
+    private final HumanIntentSource intentSource;
+    private final RobotContextProvider contextProvider;
 
-//     private final StringPublisher statePub;
-//     private final StringPublisher decisionPub;
+    private DecisionResult lastDecision = null;
+    private double lastDecisionTime = 0.0;
 
-//     public ADLManager(HumanIntentSource intentSource) {
-//         this.intentSource = intentSource;
+    private final StringPublisher statePub;
+    private final StringPublisher decisionPub;
 
-//         var nt = NetworkTableInstance.getDefault();
-//         statePub = nt.getStringTopic("/ADL/state").publish();
-//         decisionPub = nt.getStringTopic("/ADL/decision").publish();
+    public ADLManager(
+            HumanIntentSource intentSource,
+            RobotContextProvider contextProvider
+    ) {
+        this.intentSource = intentSource;
+        this.contextProvider = contextProvider;
 
-//         publishState("Inicializado");
-//     }
+        var nt = NetworkTableInstance.getDefault();
+        statePub = nt.getStringTopic("/ADL/state").publish();
+        decisionPub = nt.getStringTopic("/ADL/decision").publish();
 
-//     public void periodic() {
+        publishState("ADL inicializado");
+    }
 
-//         HumanIntent intent = intentSource.pollIntent();
-//         double now = Timer.getFPGATimestamp();
+    /**
+     * Deve ser chamado no robotPeriodic()
+     */
+    public void periodic() {
 
-//         if (intent == null) {
-//             return;
-//         }
+        HumanIntent intent = intentSource.pollIntent();
+        RobotContext context = contextProvider.build();
+        double now = Timer.getFPGATimestamp();
 
-//         if (now - lastDecisionTime < Constants.ADLManager.MIN_DECISION_INTERVAL) {
-//             return;
-//         }
+        // Nenhuma intenção nova → nada a decidir
+        if (intent == null) return;
 
-//         DecisionResult result =
-//             ADLDecision.decide(intent, currentState);
+        // Evita spam de decisões
+        if (now - lastDecisionTime < Constants.ADLManager.MIN_DECISION_INTERVAL) {
+            return;
+        }
 
-//         lastDecision = result;
-//         lastDecisionTime = now;
+        DecisionResult result =
+            ADLDecision.decide(intent, currentState, context);
 
-//         handleDecision(result);
-//     }
+        lastDecision = result;
+        lastDecisionTime = now;
 
-//     private void handleDecision(DecisionResult result) {
+        handleDecision(result);
+    }
 
-//         switch (result.type) {
+    private void handleDecision(DecisionResult result) {
 
-//             case EXECUTE:
-//                 currentState = result.state;
-//                 publishState(result.reason);
-//                 break;
+        switch (result.type) {
 
-//             case MODIFY:
-//                 currentState = result.state;
-//                 publishState("Modificado: " + result.reason);
-//                 break;
+            case EXECUTE:
+            case MODIFY:
+                currentState = result.state;
+                publishState(result.reason);
+                break;
 
-//             case HOLD:
-//                 publishDecision("Hold: " + result.reason);
-//                 break;
+            case HOLD:
+                publishDecision("HOLD: " + result.reason);
+                break;
 
-//             case REJECT:
-//                 publishDecision("Reject: " + result.reason);
-//                 break;
-//         }
-//     }
+            case REJECT:
+                publishDecision("REJECT: " + result.reason);
+                break;
+        }
+    }
 
-//     private void publishState(String reason) {
-//         statePub.set(currentState.name());
-//         decisionPub.set(reason);
-//     }
+    private void publishState(String reason) {
+        statePub.set(currentState.name());
+        decisionPub.set(reason);
+    }
 
-//     private void publishDecision(String reason) {
-//         decisionPub.set(reason);
-//     }
+    private void publishDecision(String reason) {
+        decisionPub.set(reason);
+    }
 
-//     public ADLState getCurrentState() {
-//         return currentState;
-//     }
+    public ADLState getCurrentState() {
+        return currentState;
+    }
 
-//     public DecisionResult getLastDecision() {
-//         return lastDecision;
-//     }
-// }
+    public DecisionResult getLastDecision() {
+        return lastDecision;
+    }
+}

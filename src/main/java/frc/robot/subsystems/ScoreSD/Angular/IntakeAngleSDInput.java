@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.ScoreSD.Angular;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class IntakeAngleSDInput extends SubsystemBase {

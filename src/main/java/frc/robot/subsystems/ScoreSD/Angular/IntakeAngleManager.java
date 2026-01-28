@@ -1,4 +1,4 @@
-package frc.robot.subsystems.ScoreSD.Intake;
+package frc.robot.subsystems.ScoreSD.Angular;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -9,69 +9,132 @@ import frc.robot.Constants;
 
 public class IntakeAngleManager extends SubsystemBase {
 
-    private final IntakeAngleSubsystem angle;
-
-    private final PIDController pid =
-        new PIDController(0.035, 0.0, 0.002);
-
-    private final ArmFeedforward ff =
-        new ArmFeedforward(0.05, 0.2, 0.01, 0.0);
-
-    private AngleState state = AngleState.DISABLED;
-    private double targetDeg = 0.0;
-
-    public IntakeAngleManager(IntakeAngleSubsystem angle) {
-        this.angle = angle;
-
-        pid.setTolerance(2.0);
-
-        targetDeg = Preferences.getDouble("Intake/TargetAngle", 0.0);
+    public enum IntakeAnglePosition {
+        HOME,   
+        INTAKE   
     }
 
-    // -------- CONTROLE --------
-    public void setManual(double power) {
-        state = AngleState.MANUAL;
-        angle.setPower(power);
+    private final IntakeAngleSubsystem subsystem;
+
+    private final PIDController pid;
+    private final ArmFeedforward ff;
+
+    private IntakeAnglePosition currentPosition = IntakeAnglePosition.HOME;
+
+    private double targetAngleDeg = 0.0;
+    private boolean moving = false;
+    private double lastOutput = 0.0;
+
+    public IntakeAngleManager() {
+
+        subsystem = new IntakeAngleSubsystem();
+
+        pid = new PIDController(
+            Constants.IntakeConstants.ANGLE_KP,
+            Constants.IntakeConstants.ANGLE_KI,
+            Constants.IntakeConstants.ANGLE_KD
+        );
+        pid.setTolerance(Constants.IntakeConstants.ANGLE_TOLERANCE_DEG);
+
+        ff = new ArmFeedforward(
+            Constants.IntakeConstants.ANGLE_KS,
+            Constants.IntakeConstants.ANGLE_KG,
+            Constants.IntakeConstants.ANGLE_KV,
+            Constants.IntakeConstants.ANGLE_KA
+        );
+
+        double offset =
+            Preferences.getDouble(Constants.IntakeConstants.PREF_ENCODER_OFFSET, 0.0);
+        subsystem.setEncoderOffset(offset);
+
+        SmartDashboard.putString(
+            "IntakeAngle/Position",
+            currentPosition.name()
+        );
     }
 
-    public void moveTo(double angleDeg) {
-        targetDeg = angleDeg;
-        Preferences.setDouble("Intake/TargetAngle", targetDeg);
-        state = AngleState.MOVING;
+    public void togglePosition() {
+
+        if (currentPosition == IntakeAnglePosition.HOME) {
+            moveTo(Constants.IntakeConstants.INTAKE_ANGLE_DEG);
+            currentPosition = IntakeAnglePosition.INTAKE;
+        } else {
+            moveTo(Constants.IntakeConstants.HOME_ANGLE_DEG);
+            currentPosition = IntakeAnglePosition.HOME;
+        }
+
+        SmartDashboard.putString(
+            "IntakeAngle/Position",
+            currentPosition.name()
+        );
     }
 
-    public void hold() {
-        targetDeg = angle.getAngleDeg();
-        state = AngleState.HOLDING;
+    public IntakeAnglePosition getCurrentPosition() {
+        return currentPosition;
     }
 
-    public void disable() {
-        state = AngleState.DISABLED;
-        angle.stop();
+    public void stop() {
+        moving = false;
+        subsystem.stop();
+    }
+
+
+    private void moveTo(double angleDeg) {
+        targetAngleDeg = angleDeg;
+        moving = true;
     }
 
     @Override
     public void periodic() {
 
-        if (state == AngleState.MOVING || state == AngleState.HOLDING) {
+        if (!moving) return;
 
-            double current = angle.getAngleDeg();
-            double error = targetDeg - current;
+        double currentAngle = subsystem.getAngleDeg();
 
-            double pidOut = pid.calculate(current, targetDeg);
-            double ffOut  = ff.calculate(Math.toRadians(current), 0.0);
+        double error =
+            ((targetAngleDeg - currentAngle + 540.0) % 360.0) - 180.0;
 
-            double output =
-                Math.max(Math.min(pidOut + ffOut, 0.6), -0.6);
+        double pidOut = pid.calculate(error, 0.0);
+        double ffOut  = ff.calculate(Math.toRadians(currentAngle), 0.0);
 
-            angle.setPower(output);
+        double output = pidOut + ffOut;
 
-            if (pid.atSetpoint() && state == AngleState.MOVING) {
-                state = AngleState.HOLDING;
-            }
+        output = Math.max(
+            Math.min(output, Constants.IntakeConstants.ANGLE_MAX_OUTPUT),
+            -Constants.IntakeConstants.ANGLE_MAX_OUTPUT
+        );
 
-            SmartDashboard.putNumber("Intake/AngleTarget", targetDeg);
-            SmartDashboard.putString("Intake/AngleState", state.name());
+        double ramp = 0.03;
+        output = lastOutput +
+            Math.max(Math.min(output - lastOutput, ramp), -ramp);
+
+        lastOutput = output;
+
+        subsystem.setPower(output);
+
+        SmartDashboard.putNumber("IntakeAngle/TargetDeg", targetAngleDeg);
+        SmartDashboard.putNumber("IntakeAngle/ErrorDeg", error);
+        SmartDashboard.putNumber("IntakeAngle/Output", output);
+
+        if (Math.abs(error) < Constants.IntakeConstants.ANGLE_TOLERANCE_DEG) {
+            subsystem.stop();
+            moving = false;
         }
+    }
+
+    public void calibrateZero() {
+        double raw = subsystem.getAngleDeg();
+        double newOffset = -raw;
+
+        subsystem.setEncoderOffset(newOffset);
+        Preferences.setDouble(
+            Constants.IntakeConstants.PREF_ENCODER_OFFSET,
+            newOffset
+        );
+
+        SmartDashboard.putString(
+            "IntakeAngle/Calibration",
+            "ZERO CALIBRADO"
+        );
     }
 }

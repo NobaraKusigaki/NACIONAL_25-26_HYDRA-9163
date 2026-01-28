@@ -9,96 +9,93 @@ public class ADLDecision {
     ) {
 
         if (intent == null) {
-            return DecisionResult.hold(
-                currentState,
-                "Nenhuma intenção recebida"
-            );
+            return DecisionResult.hold(currentState, "Sem intenção");
         }
 
         if (intent.getType() == HumanIntent.Type.ABORT) {
             return DecisionResult.execute(
                 ADLState.EMERGENCY,
-                "Abort solicitado pelo operador"
+                "Abort solicitado"
             );
         }
 
         if (currentState.isCritical()) {
             return DecisionResult.reject(
                 currentState,
-                "Robô em estado crítico: " + currentState
+                "Estado crítico: " + currentState
             );
         }
 
-        if (intent.requiresVision()) {
+        // Visão insegura → HOLD
+        if (intent.requiresVision() && !context.canUseVision()) {
             return DecisionResult.hold(
                 currentState,
-                "Aguardando confirmação segura da visão"
+                "Visão não confiável"
+            );
+        }
+
+        // Stress alto → limita ações
+        if (!context.isRobotHealthy()
+                && intent.getUrgency() < 0.9) {
+            return DecisionResult.reject(
+                currentState,
+                "Robô sob stress alto"
+            );
+        }
+
+        // Endgame → só aceita climb
+        if (context.endgame
+                && intent.getType() != HumanIntent.Type.CLIMB) {
+            return DecisionResult.reject(
+                currentState,
+                "Endgame: apenas climb permitido"
             );
         }
 
         if (currentState.isBusy()) {
-
-            switch (intent.getType()) {
-
-                case MOVE_TO_ZONE:
-                    return DecisionResult.modify(
-                        ADLState.MOVING,
-                        "Robô ocupado, ajustando para movimento simples"
-                    );
-
-                case HOLD_POSITION:
-                    return DecisionResult.execute(
-                        currentState,
-                        "Mantendo posição atual"
-                    );
-
-                default:
-                    return DecisionResult.reject(
-                        currentState,
-                        "Robô ocupado, não pode executar: " + intent.getType()
-                    );
-            }
+            return DecisionResult.hold(
+                currentState,
+                "Robô ocupado"
+            );
         }
 
+        // ===== Decisão principal =====
         switch (intent.getType()) {
 
             case ACQUIRE_PIECE:
                 return DecisionResult.execute(
                     ADLState.ACQUIRING,
-                    "Iniciando aquisição de peça em "
-                        + intent.getTargetZone()
+                    "Adquirindo peça em " + intent.getTargetZone()
                 );
 
             case SCORE_PIECE:
                 return DecisionResult.execute(
                     ADLState.SCORING,
-                    "Iniciando pontuação em "
-                        + intent.getTargetZone()
+                    "Pontuando em " + intent.getTargetZone()
                 );
 
             case MOVE_TO_ZONE:
                 return DecisionResult.execute(
                     ADLState.MOVING,
-                    "Movendo para zona "
-                        + intent.getTargetZone()
+                    "Movendo para " + intent.getTargetZone()
                 );
 
             case CLIMB:
                 return DecisionResult.execute(
                     ADLState.CLIMBING,
-                    "Iniciando escalada"
+                    "Iniciando climb"
                 );
 
             case HOLD_POSITION:
                 return DecisionResult.execute(
                     ADLState.IDLE,
-                    "Mantendo posição solicitada"
+                    "Mantendo posição"
                 );
 
             case ESCAPE:
                 return DecisionResult.execute(
                     ADLState.MOVING,
-                    "Executando manobra de escape"
+                    "Manobra de escape"
                 );
 
             default:

@@ -11,11 +11,11 @@ public class IntakeManager extends SubsystemBase {
             OUTTAKING
         }
     
-    private final IntakeInputSubsystem intake;
+    private final IntakeRollerSubsystem intake;
     private IntakeState currentState = IntakeState.IDLE;
 
     public IntakeManager() {
-        intake = new IntakeInputSubsystem();
+        intake = new IntakeRollerSubsystem();
     }
     
   
@@ -35,16 +35,16 @@ public class IntakeManager extends SubsystemBase {
         switch (currentState) {
 
             case INTAKING:
-                intake.setPower(0.6);
+                intake.setSpd(0.6);
                 break;
 
             case OUTTAKING:
-                intake.setPower(-0.6);
+                intake.setSpd(-0.6);
                 break;
 
             case IDLE:
             default:
-                intake.stopMotors();
+                intake.stop();
                 break;
         }
     }
