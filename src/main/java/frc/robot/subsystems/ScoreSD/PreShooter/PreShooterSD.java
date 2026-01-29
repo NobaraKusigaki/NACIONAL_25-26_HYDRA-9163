@@ -1,19 +1,16 @@
 package frc.robot.subsystems.ScoreSD.PreShooter;
 
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringSubscriber;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.ScoreSD.PreShooter.PreShooterManager.PreShooterState;
 
 public class PreShooterSD extends SubsystemBase {
 
-    private final PreShooterManager preshooterManager;
+    private final PreShooterManager manager;
     private final StringSubscriber commandSub;
+    private String lastCmd = "";
 
-    private String lastCommand = "IDLE";
-
-    public PreShooterSD(PreShooterManager preshooterManager) {
-        this.preshooterManager = preshooterManager;
+    public PreShooterSD(PreShooterManager manager) {
+        this.manager = manager;
 
         commandSub = NetworkTableInstance.getDefault()
             .getStringTopic("/StreamDeck/PreShooter/command")
@@ -22,19 +19,19 @@ public class PreShooterSD extends SubsystemBase {
 
     @Override
     public void periodic() {
-        String cmd = commandSub.get();
 
-        if (cmd.equals(lastCommand)) return;
-        lastCommand = cmd;
+        String cmd = commandSub.get();
+        if (cmd.equals(lastCmd)) return;
+        lastCmd = cmd;
 
         switch (cmd) {
-            case "SPIN":
-                preshooterManager.setState(PreShooterState.SPINNING);
+            case "ARM":
+                manager.arm();
                 break;
 
-            case "IDLE":
+            case "STOP":
             default:
-                preshooterManager.setState(PreShooterState.IDLE);
+                manager.stop();
                 break;
         }
     }

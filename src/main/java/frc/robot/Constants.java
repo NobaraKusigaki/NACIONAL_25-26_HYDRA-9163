@@ -52,15 +52,16 @@ public final class Constants {
     
     public static final double ANGLE_MAX_OUTPUT = 0;
 
-    public static final double INTAKE_POWER = 0;
-
-    public static final double OUTTAKE_POWER = 0;
+    public static final double INTAKE_POWER = 0.4;
+    public static final double OUTTAKE_POWER = 0.4;
   }
 
   public static class PreShooterConstants{
 
     public static final int LEADER_ID = 0;
     public static final int FOLLOWER_ID = 0;
+    
+    public static final double FEED_POWER = 0;
     
   }
   public static class ADLManager{

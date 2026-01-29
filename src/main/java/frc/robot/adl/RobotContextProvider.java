@@ -63,7 +63,7 @@ public class RobotContextProvider {
         return new RobotContext.Builder()
             .battery(
                 batteryVoltageSub.get(),
-                stressScoreSub.get(),
+                stressScoreSub.get(), 
                 stressLevelSub.get(),
                 speedLimitedSub.get()
             )

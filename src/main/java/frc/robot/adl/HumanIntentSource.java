@@ -2,11 +2,6 @@ package frc.robot.adl;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringSubscriber;
 
-/**
- * HumanIntentSource
- * Traduz comandos humanos (Stream Deck, Dashboard, Coach)
- * em intenções.
- */
 public class HumanIntentSource {
 
     private final StringSubscriber intentSub;
@@ -18,10 +13,6 @@ public class HumanIntentSource {
             .subscribe("");
     }
 
-    /**
-     * Retorna uma nova intenção apenas quando o humano
-     * explicitamente pediu algo novo.
-     */
     public HumanIntent pollIntent() {
 
         String cmd = intentSub.get();
