@@ -30,7 +30,7 @@ public class ADLExecutor {
 
             case ACQUIRING:
                 intake.armIntake();
-                intakeAngle.togglePosition();
+                //intakeAngle.togglePosition();
                 break;
 
             case SCORING:

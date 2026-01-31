@@ -33,14 +33,12 @@ TABLES_AND_KEYS = {
     "StreamDeck/PreShooter": [
     "command"
 ],
-    "StreamDeck/MotorTest": [
-        "enable",
-        "direction",
-        "status"
-    ],
-    "StreamDeck/Intake": [
-        "command"
-    ],
+
+"StreamDeck/IntakeAngle": [
+    "command"
+],
+
+
     "limelight-back": [
         "piece_tx",        # erro angular (graus)        # erro angular (graus)
         "ta",              # área do alvo              # área do alvo

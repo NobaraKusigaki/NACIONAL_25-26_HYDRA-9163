@@ -3,7 +3,7 @@ package frc.robot.Dashboards.RobotStress;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
-public class DashboardPublisher {
+public class DashboardPublisherStress {
     private final NetworkTable stressTable = NetworkTableInstance.getDefault().getTable("RobotStress");
     
 public void publish(RobotStressData data, double speedScale, double chassisSpeed) {

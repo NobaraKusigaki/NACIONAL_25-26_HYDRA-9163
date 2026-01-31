@@ -43,7 +43,8 @@ process.stdin.on("keypress", (str, key) => {
   if (key.name === "i") send("StreamDeck/Intake", "INTAKE");
   if (key.name === "o") send("StreamDeck/Intake", "OUTTAKE");
   if (key.name === "k") send("StreamDeck/Intake", "IDLE");
-
+  
+  if (key.name === "t") send("StreamDeck/IntakeAngle", "TOGGLE");
   // Spindexer
   if (key.name === "p") send("StreamDeck/Spindexer", "SPIN");
   if (key.name === "l") send("StreamDeck/Spindexer", "IDLE");

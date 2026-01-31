@@ -26,34 +26,32 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int INTAKE_LEADER_ID = 10;
+    //public static final int INTAKE_LEADER_ID = 10; //feito 
 
-    public static final int ANGLE_MOTOR_ID = 9;
-    public static final DutyCycle ANGLE_ENCODER_ID = null;
+    public static final int ANGLE_MOTOR_ID = 9; //feito 
+    public static final int ANGLE_ENCODER_ID = 0; //feito 
     
     public static final int MIN_ANGLE_DEG = 0;
     public static final double MAX_ANGLE_DEG = 0;
     
-    public static final double ANGLE_KP = 0.15;
+    public static final double ANGLE_KP = 0.022;
     public static final double ANGLE_KI = 0;
-    public static final double ANGLE_KD = 0.001;
+    public static final double ANGLE_KD = 0.0006;
     
-    public static final double ANGLE_TOLERANCE_DEG = 1;
+    public static final double ANGLE_TOLERANCE_DEG = 0.7;
     
-    public static final double ANGLE_KS = 0.5;
-    public static final double ANGLE_KG = 0.28;
+    public static final double ANGLE_KS = 0;
+    public static final double ANGLE_KG = 0;
     public static final double ANGLE_KV = 0;
     public static final double ANGLE_KA = 0;
     
-    public static final String PREF_ENCODER_OFFSET = null;
+    public static final String PREF_ENCODER_OFFSET = "Encoder offset Intake Angle";
     
-    public static final double INTAKE_ANGLE_DEG = 0;
-    public static final double HOME_ANGLE_DEG = 0;
-    
-    public static final double ANGLE_MAX_OUTPUT = 0;
-
+  
     public static final double INTAKE_POWER = 0.4;
     public static final double OUTTAKE_POWER = 0.4;
+    public static final int INTAKE_LEADER_ID = 0;
+
   }
 
   public static class PreShooterConstants{

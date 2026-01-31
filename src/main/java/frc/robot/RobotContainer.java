@@ -1,7 +1,7 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -9,25 +9,43 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
-import frc.robot.Dashboards.RobotStress.DashboardPublisher;
+import frc.robot.Dashboards.RobotStress.DashboardPublisherStress;
 import frc.robot.Dashboards.RobotStress.RobotStressController;
 import frc.robot.Dashboards.RobotStress.RobotStressData;
 import frc.robot.Dashboards.RobotStress.RobotStressMonitor;
+import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
+import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleSDInput;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
 import java.io.File;
 
 public class RobotContainer {
 
-  private final CommandPS5Controller controller = new CommandPS5Controller(0);
+  private final CommandPS5Controller driver = new CommandPS5Controller(0);
 
-  private final SwerveSubsystem drivebase = new SwerveSubsystem(
-    new File(Filesystem.getDeployDirectory(), "swerve/neo"));
+  private final SwerveSubsystem drivebase =
+      new SwerveSubsystem(
+          new File(Filesystem.getDeployDirectory(), "swerve/neo"));
 
-  private final RobotStressMonitor stressMonitor = new RobotStressMonitor();
-  private final RobotStressController stressController = new RobotStressController();
-  private final DashboardPublisher dashboardPublisher = new DashboardPublisher();
+// ==================== STREAM DECK ==================== 
+
+ private final IntakeAngleManager intakeAngle =
+ new IntakeAngleManager();
+
+private final IntakeAngleSDInput intakeAngleSD =
+ new IntakeAngleSDInput(intakeAngle);
+  
+  // ================= ROBOT STRESS MONITORING =================
+  private final RobotStressMonitor stressMonitor =
+      new RobotStressMonitor();
+
+  private final RobotStressController stressController =
+      new RobotStressController();
+
+  private final DashboardPublisherStress dashboardPublisher =
+      new DashboardPublisherStress();
 
   private final NetworkTable stressTable =
       NetworkTableInstance.getDefault().getTable("RobotStress");
@@ -44,23 +62,24 @@ public class RobotContainer {
   }
 
   private void configureDefaultCommands() {
+
     drivebase.setDefaultCommand(
         Commands.run(() -> {
 
           driveSpeedScale = MathUtil.clamp(
               stressSpeedScaleEntry.getDouble(1.0),
-              0.3,   // limite mínimo de segurança
-              1.0    // limite máximo
+              0.3,
+              1.0
           );
 
           double speed = Constants.MAX_SPEED * driveSpeedScale;
 
           drivebase.drive(
               new Translation2d(
-                  controller.getLeftY() * speed,
-                  -controller.getLeftX() * speed
+                  driver.getLeftY() * speed,
+                  -driver.getLeftX() * speed
               ),
-              controller.getRightX() * speed
+              driver.getRightX() * speed
           );
 
         }, drivebase)
@@ -69,43 +88,59 @@ public class RobotContainer {
 
   private void configureBindings() {
 
-    //#ANGULAR DRIVE COMMANDS
 
-    // controller.triangle().onTrue(
-    //     drivebase.snapToAngleOnce(Rotation2d.fromDegrees(0)));
+    // driver.square().onTrue(
+    //     drivebase.toggleAimLockLime4Command()
+    // );
 
-    // controller.circle().onTrue(
-    //     drivebase.snapToAngleOnce(Rotation2d.fromDegrees(90)));
+    // driver.circle().onTrue(
+    //     drivebase.toggleAimLockLime2Command()
+    // );
 
-    // controller.cross().onTrue(
-    //     drivebase.snapToAngleOnce(Rotation2d.fromDegrees(180)));
+    // driver.triangle().onTrue(
+    //     Commands.runOnce(
+    //         () -> drivebase.beginAlignLime2(
+    //             () -> driver.triangle().getAsBoolean()),
+    //         drivebase
+    //     )
+    // );
 
-    // controller.square().onTrue(
-    //     drivebase.snapToAngleOnce(Rotation2d.fromDegrees(270)));
+    // driver.triangle().onFalse(
+    //     Commands.runOnce(
+    //         drivebase::endAlignLime2,
+    //         drivebase
+    //     )
+    // );
 
-    //#STREAM DECK SYSTEMS COMMANDS
-
-    // MODOS DAS LIMELIGHTS
-
-    controller.square().onTrue(
-        drivebase.toggleAimLockLime4Command()
+    driver.cross().onTrue(
+        Commands.runOnce(intakeAngle::calibrateZero, intakeAngle)
     );
-
-    controller.circle().onTrue(
-        drivebase.toggleAimLockLime2Command()
+    
+    driver.circle().onTrue(
+        Commands.runOnce(intakeAngle::calibrateTarget, intakeAngle)
     );
+    
+      new Trigger(driver.L2())
+      .whileTrue(
+          Commands.run(intakeAngle::manualUp, intakeAngle)
+      )
+      .onFalse(
+          Commands.runOnce(intakeAngle::stop, intakeAngle)
+      );
+  
+  new Trigger(driver.R2())
+      .whileTrue(
+          Commands.run(intakeAngle::manualDown, intakeAngle)
+      )
+      .onFalse(
+          Commands.runOnce(intakeAngle::stop, intakeAngle)
+      );
+  
+      driver.square().onTrue(
+      Commands.runOnce(intakeAngle::togglePosition, intakeAngle)
+  );
+    
 
-    controller.triangle().onTrue(
-        Commands.runOnce(
-            () -> drivebase.beginAlignLime2(
-                () -> controller.triangle().getAsBoolean()),
-            drivebase
-        )
-    );
-
-    controller.triangle().onFalse(
-        Commands.runOnce(drivebase::endAlignLime2, drivebase)
-    );
   }
 
   public void updateDashboards() {
@@ -124,6 +159,7 @@ public class RobotContainer {
         chassisSpeed
     );
   }
+
 
   public Command getAutonomousCommand() {
     return drivebase.getAutonomousCommand("AutoSimple");
