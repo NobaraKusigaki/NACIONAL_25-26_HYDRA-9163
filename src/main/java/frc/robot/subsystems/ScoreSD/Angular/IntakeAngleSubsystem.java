@@ -18,12 +18,11 @@ public class IntakeAngleSubsystem extends SubsystemBase {
     private final DutyCycleEncoder absEncoder =
         new DutyCycleEncoder(Constants.IntakeConstants.ANGLE_ENCODER_ID);
 
-    // Offset absoluto redefinível
     private double zeroOffsetDeg = 0.0;
 
     public IntakeAngleSubsystem() {
         SparkMaxConfig cfg = new SparkMaxConfig();
-        cfg.idleMode(IdleMode.kBrake).smartCurrentLimit(30);
+        cfg.idleMode(IdleMode.kBrake).smartCurrentLimit(40);
 
         motor.configure(
             cfg,
@@ -32,12 +31,10 @@ public class IntakeAngleSubsystem extends SubsystemBase {
         );
     }
 
-    /** Ângulo bruto do encoder (invertido se necessário) */
     private double getRawAngleDeg() {
         return (1.0 - absEncoder.get()) * 360.0;
     }
 
-    /** Ângulo CONTÍNUO relativo ao último ZERO */
     public double getAngleDeg() {
         return getRawAngleDeg() + zeroOffsetDeg;
     }
@@ -46,11 +43,11 @@ public class IntakeAngleSubsystem extends SubsystemBase {
         zeroOffsetDeg = Preferences.getDouble("IntakeAngleZero", 0.0);
     }
 
-    /** Faz a posição atual virar 0° */
     public void recalibrateZero() {
         zeroOffsetDeg = -getRawAngleDeg();
+        Preferences.setDouble("IntakeAngleZero", zeroOffsetDeg);
     }
-
+    
     public double getZeroOffset() {
         return zeroOffsetDeg;
     }

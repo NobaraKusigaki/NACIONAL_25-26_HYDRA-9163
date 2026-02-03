@@ -16,7 +16,7 @@ import frc.robot.Dashboards.RobotStress.RobotStressController;
 import frc.robot.Dashboards.RobotStress.RobotStressData;
 import frc.robot.Dashboards.RobotStress.RobotStressMonitor;
 import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
-import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleSDInput;
+import frc.robot.subsystems.ScoreSD.Angular.StreamDeckIntakeAngleController;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
 import java.io.File;
@@ -31,11 +31,10 @@ public class RobotContainer {
 
 // ==================== STREAM DECK ==================== 
 
- private final IntakeAngleManager intakeAngle =
- new IntakeAngleManager();
+ private final IntakeAngleManager intakeAngle = new IntakeAngleManager();
+private final StreamDeckIntakeAngleController sdIntake =
+    new StreamDeckIntakeAngleController(intakeAngle);
 
-private final IntakeAngleSDInput intakeAngleSD =
- new IntakeAngleSDInput(intakeAngle);
   
   // ================= ROBOT STRESS MONITORING =================
   private final RobotStressMonitor stressMonitor =

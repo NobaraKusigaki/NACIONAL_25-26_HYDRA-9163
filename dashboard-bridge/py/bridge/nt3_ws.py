@@ -26,14 +26,6 @@ TABLES_AND_KEYS = {
         "chassisSpeed"
     ],
 
-    "StreamDeck/Intake": [
-        "command"
-    ],
-
-    "StreamDeck/PreShooter": [
-    "command"
-],
-
 "StreamDeck/IntakeAngle": [
     "command"
 ],
