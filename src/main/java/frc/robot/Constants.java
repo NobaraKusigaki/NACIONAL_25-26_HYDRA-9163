@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DutyCycle;
 import swervelib.math.Matter;
 
 public final class Constants {
@@ -12,7 +13,7 @@ public final class Constants {
   public static final double MAX_SPEED = Units.feetToMeters(12);
     public static final double K_AUTO_PIECE_FORWARD = -0.1;
   public static final double TA_TARGET = 5;
-
+  
   public static final class DrivebaseConstants {
     public static final double WHEEL_LOCK_TIME = 10;
   }
@@ -25,19 +26,58 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int INTAKE_LEADER_ID = 0;
-    public static final int INTAKE_FOLLOWER_ID = 0;
-  }
+    public static final int INTAKE_LEADER_ID = 10; //feito 
 
+    public static final int ANGLE_MOTOR_ID = 9; //feito 
+    public static final int ANGLE_ENCODER_ID = 0; //feito 
+    
+    public static final int MIN_ANGLE_DEG = 0;
+    public static final double MAX_ANGLE_DEG = 0;
+    
+    public static final double ANGLE_KP = 0.03;
+    public static final double ANGLE_KI = 0.0;
+    public static final double ANGLE_KD = 0.000022;
+
+    public static final double ANGLE_KS = 0.0;
+    public static final double ANGLE_KG = 0.018;
+    public static final double ANGLE_KV = 0.0;
+    public static final double ANGLE_KA = 0.0;
+        
+public static final double ANGLE_TOLERANCE_DEG = 1;
+    
+    
+    public static final String PREF_ENCODER_OFFSET = "Encoder offset Intake Angle";
+    
+  
+    public static final double INTAKE_POWER = 0.4;
+    public static final double OUTTAKE_POWER = 0.4;
+
+  }
   public static class PreShooterConstants{
 
     public static final int LEADER_ID = 0;
     public static final int FOLLOWER_ID = 0;
+    
+    public static final double FEED_POWER = 0;
     
   }
   public static class ADLManager{
     public static final double MIN_DECISION_INTERVAL = 0.15;
   }
   
+  public static class Climb {
+    public static final double KP = 0.0;
+    public static final double KI = 0.0;
+    public static final double KD = 0.0;
+
+    public static final double TOLERANCE = 0;
+
+    public static final String MIN_POS_KEY = "Climb/MinPos";
+    public static final String MAX_POS_KEY = "Climb/MaxPos";
+    public static final double MAX_OUTPUT = 0;
+    
+    public static final int LEFT_MOTOR_ID = 0;
+    public static final int RIGHT_MOTOR_ID = 0;
+  }
 
 }

@@ -12,8 +12,12 @@ WS_PATH = "/nt/dashboard"
 
 POLL_INTERVAL = 0.15
 clients = set()
-POLL_INTERVAL = 0.15
-clients = set()
+
+# ================= STREAMDECK =================
+SD_TABLE = "StreamDeck/IntakeAngle"
+SD_KEY = "toggleCount"
+toggle_count = 0
+# ==============================================
 
 TABLES_AND_KEYS = {
     "RobotStress": [
@@ -26,21 +30,10 @@ TABLES_AND_KEYS = {
         "chassisSpeed"
     ],
 
-    "StreamDeck/Intake": [
-        "command"
+    "StreamDeck/IntakeAngle": [
+        "toggleCount"
     ],
 
-    "StreamDeck/PreShooter": [
-    "command"
-],
-    "StreamDeck/MotorTest": [
-        "enable",
-        "direction",
-        "status"
-    ],
-    "StreamDeck/Intake": [
-        "command"
-    ],
     "limelight-back": [
         "piece_tx",        # erro angular (graus)  
         "ta",              # área do alvo     
@@ -49,21 +42,23 @@ TABLES_AND_KEYS = {
         "bbox",            # bounding box p/ UI    
         "hw"               # health/watchdog
     ],
+
     "limelight-front": [
         "tx",
         "tv",
         "ta",
         "hw"
     ],
+
     "Modes": [
-        "AimLockLime4",    # 0 OFF | 1 TAG
-        "AimLockLime2",    # 0 OFF | 1 TAG
-        "AlignLime2"       # 0 OFF | 1 ON | 2 AUTO
+        "AimLockLime4",
+        "AimLockLime2",
+        "AlignLime2"
     ]
 }
 
 def connect_nt(roborio_host):
-    print(f"🔌 Inicializando NetworkTables -> server={roborio_host}")
+    print(f"🔌 Inicializando NT -> {roborio_host}")
     NetworkTables.initialize(server=roborio_host)
 
     waited = 0.0
@@ -71,64 +66,43 @@ def connect_nt(roborio_host):
         time.sleep(0.1)
         waited += 0.1
         if waited > 10.0:
-            print("⚠️ Timeout NT, continuando mesmo assim...")
+            print("⚠️ Timeout NT")
             break
 
     if NetworkTables.isConnected():
-        print("✅ Conectado ao NetworkTables (NT3)")
-    else:
-        print("⚠️ NT ainda não confirmou conexão")
+        print("✅ NT conectado")
 
-def get_table(table_name):
-    return NetworkTables.getTable(table_name)
+def get_table(name):
+    return NetworkTables.getTable(name)
 
 def read_any(table, key):
-    try:
-        arr = table.getNumberArray(key, None)
-        if arr is not None:
-            return list(arr)
-    except Exception:
-        pass
-
-    try:
-        v = table.getNumber(key, None)
-        if v is not None:
-            return v
-    except Exception:
-        pass
-
-    try:
-        v = table.getBoolean(key, None)
-        if v is not None:
-            return bool(v)
-    except Exception:
-        pass
-
-    try:
-        v = table.getString(key, None)
-        if v is not None:
-            return v
-    except Exception:
-        pass
-
+    for fn in (
+        table.getNumberArray,
+        table.getNumber,
+        table.getBoolean,
+        table.getString
+    ):
+        try:
+            v = fn(key, None)
+            if v is not None:
+                return list(v) if isinstance(v, (list, tuple)) else v
+        except Exception:
+            pass
     return None
 
-
 async def poll_and_broadcast():
-    last_values = {}
+    last = {}
 
     while True:
         for table_name, keys in TABLES_AND_KEYS.items():
             table = get_table(table_name)
-
             for key in keys:
                 topic = f"/{table_name}/{key}"
                 val = read_any(table, key)
 
-                if topic not in last_values or last_values[topic] != val:
-                    last_values[topic] = val
-                    payload = {"topic": topic, "value": val}
-                    msg = json.dumps(payload)
+                if last.get(topic) != val:
+                    last[topic] = val
+                    msg = json.dumps({"topic": topic, "value": val})
 
                     dead = []
                     for ws in clients:
@@ -145,21 +119,32 @@ async def poll_and_broadcast():
         await asyncio.sleep(POLL_INTERVAL)
 
 async def handle_ws(ws):
-    print("🟢 Browser conectado:", ws.remote_address)
+    global toggle_count
+
+    print("🟢 WS conectado:", ws.remote_address)
     clients.add(ws)
 
     try:
-        # Snapshot inicial
+        # snapshot inicial
         for table_name, keys in TABLES_AND_KEYS.items():
             table = get_table(table_name)
             for key in keys:
-                topic = f"/{table_name}/{key}"
-                val = read_any(table, key)
-                await ws.send(json.dumps({"topic": topic, "value": val}))
+                await ws.send(json.dumps({
+                    "topic": f"/{table_name}/{key}",
+                    "value": read_any(table, key)
+                }))
 
         async for message in ws:
             obj = json.loads(message)
 
+            # ===== STREAMDECK PRESS =====
+            if obj.get("action") == "press":
+                toggle_count += 1
+                get_table(SD_TABLE).putNumber(SD_KEY, toggle_count)
+                print(f"📡 StreamDeck toggleCount = {toggle_count}")
+                continue
+
+            # ===== PUT GENÉRICO (dashboard) =====
             if obj.get("action") == "put":
                 table = get_table(obj["table"])
                 key = obj["key"]
@@ -180,13 +165,13 @@ async def handle_ws(ws):
         print("❌ WS erro:", e)
     finally:
         clients.discard(ws)
-        print("🔴 Browser desconectou")
+        print("🔴 WS desconectado")
 
 async def main_async(roborio, port):
     connect_nt(roborio)
 
     server = await websockets.serve(handle_ws, WS_HOST, port)
-    print(f"🌐 WebSocket ouvindo em ws://localhost:{port}{WS_PATH}")
+    print(f"🌐 WS em ws://localhost:{port}{WS_PATH}")
 
     poll_task = asyncio.create_task(poll_and_broadcast())
     await server.wait_closed()
@@ -201,7 +186,7 @@ def main():
     try:
         asyncio.run(main_async(args.roborio, args.port))
     except KeyboardInterrupt:
-        print("⛔ Encerrando...")
+        print("⛔ Encerrado")
 
 if __name__ == "__main__":
     main()
