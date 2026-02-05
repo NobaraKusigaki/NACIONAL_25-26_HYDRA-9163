@@ -50,7 +50,7 @@ function renderAll() {
 // ==========================
 // TEMPERATURA LIMELIGHT (UI)
 // ==========================
-const TEMP_WARN_C = 65;
+const TEMP_WARN_C = 70;
 
 function setTemp(elementId, tempC) {
   const el = document.getElementById(elementId);

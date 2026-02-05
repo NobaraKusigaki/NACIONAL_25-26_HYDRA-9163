@@ -3,9 +3,9 @@
 const UPDATE_RATE_MS = 50;
 
 // thresholds de seta
-const TX_DEADBAND = 10;
-const TX_MEDIUM   = 60;
-const TX_STRONG   = 120;
+const TX_DEADBAND = 2;
+const TX_MEDIUM   = 5;
+const TX_STRONG   = 8;
 
 // WebSocket
 const WS_URL = "ws://127.0.0.1:5810/nt/dashboard";

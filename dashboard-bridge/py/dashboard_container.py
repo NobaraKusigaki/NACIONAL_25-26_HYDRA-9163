@@ -1,12 +1,12 @@
 import threading
 import time
 
-import limelight.HorizontalOffset # seu arquivo HorizontalOffset.py
+import limelight.AI_Data # seu arquivo AI_Data.py
 import bridge.nt3_ws            # seu arquivo nt3_ws.py
 
 def run_horizontal():
-    # chama o loop do HorizontalOffset (precisa existir main_loop lá)
-    limelight.HorizontalOffset.main_loop()
+    # chama o loop do AI_Data (precisa existir main_loop lá)
+    limelight.AI_Data.main_loop()
 
 def run_ws():
     # roda o websocket do nt3_ws no mesmo processo
