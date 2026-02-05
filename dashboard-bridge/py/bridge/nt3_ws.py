@@ -35,12 +35,12 @@ TABLES_AND_KEYS = {
     ],
 
     "limelight-back": [
-        "piece_tx",
-        "ta",
-        "piece_distance",
-        "has_target",
-        "bbox",
-        "hw"
+        "piece_tx",        # erro angular (graus)  
+        "ta",              # área do alvo     
+        "piece_distance",  # opcional
+        "has_target",      # bool   
+        "bbox",            # bounding box p/ UI    
+        "hw"               # health/watchdog
     ],
 
     "limelight-front": [

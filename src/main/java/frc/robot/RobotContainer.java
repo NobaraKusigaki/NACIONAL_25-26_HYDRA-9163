@@ -76,7 +76,7 @@ private final StreamDeckIntakeAngleController sdIntake =
           drivebase.drive(
               new Translation2d(
                   driver.getLeftY() * speed,
-                  -driver.getLeftX() * speed
+                  driver.getLeftX() * speed
               ),
               driver.getRightX() * speed
           );
