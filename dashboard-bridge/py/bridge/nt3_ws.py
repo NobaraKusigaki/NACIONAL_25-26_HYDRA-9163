@@ -58,7 +58,7 @@ TABLES_AND_KEYS = {
 }
 
 def connect_nt(roborio_host):
-    print(f"🔌 Inicializando NT -> {roborio_host}")
+    print(f"Inicializando NT -> {roborio_host}")
     NetworkTables.initialize(server=roborio_host)
 
     waited = 0.0
@@ -66,11 +66,11 @@ def connect_nt(roborio_host):
         time.sleep(0.1)
         waited += 0.1
         if waited > 10.0:
-            print("⚠️ Timeout NT")
+            print("Timeout NT")
             break
 
     if NetworkTables.isConnected():
-        print("✅ NT conectado")
+        print("NT conectado")
 
 def get_table(name):
     return NetworkTables.getTable(name)
@@ -114,14 +114,14 @@ async def poll_and_broadcast():
                     for ws in dead:
                         clients.discard(ws)
 
-                    print("📣", topic, val)
+                    print(topic, val)
 
         await asyncio.sleep(POLL_INTERVAL)
 
 async def handle_ws(ws):
     global toggle_count
 
-    print("🟢 WS conectado:", ws.remote_address)
+    print("WS conectado:", ws.remote_address)
     clients.add(ws)
 
     try:
@@ -141,7 +141,7 @@ async def handle_ws(ws):
             if obj.get("action") == "press":
                 toggle_count += 1
                 get_table(SD_TABLE).putNumber(SD_KEY, toggle_count)
-                print(f"📡 StreamDeck toggleCount = {toggle_count}")
+                print(f"StreamDeck toggleCount = {toggle_count}")
                 continue
 
             # ===== PUT GENÉRICO (dashboard) =====
@@ -159,19 +159,19 @@ async def handle_ws(ws):
                 else:
                     table.putString(key, str(value))
 
-                print("📡 PUT:", obj)
+                print("PUT:", obj)
 
     except Exception as e:
-        print("❌ WS erro:", e)
+        print("WS erro:", e)
     finally:
         clients.discard(ws)
-        print("🔴 WS desconectado")
+        print("WS desconectado")
 
 async def main_async(roborio, port):
     connect_nt(roborio)
 
     server = await websockets.serve(handle_ws, WS_HOST, port)
-    print(f"🌐 WS em ws://localhost:{port}{WS_PATH}")
+    print(f"WS em ws://localhost:{port}{WS_PATH}")
 
     poll_task = asyncio.create_task(poll_and_broadcast())
     await server.wait_closed()
@@ -186,7 +186,7 @@ def main():
     try:
         asyncio.run(main_async(args.roborio, args.port))
     except KeyboardInterrupt:
-        print("⛔ Encerrado")
+        print("Encerrado")
 
 if __name__ == "__main__":
     main()

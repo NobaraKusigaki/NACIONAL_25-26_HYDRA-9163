@@ -47,10 +47,10 @@ public class Robot extends LoggedRobot {
 //      e.printStackTrace(); 1
 //  }
 
-    UsbCamera cam = CameraServer.startAutomaticCapture(0);
+    // UsbCamera cam = CameraServer.startAutomaticCapture(0);
 
-    cam.setResolution(160, 120);
-    cam.setFPS(20);
+    // cam.setResolution(160, 120);
+    // cam.setFPS(20);
   }
 
   @Override
