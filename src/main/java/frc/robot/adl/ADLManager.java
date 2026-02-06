@@ -32,19 +32,14 @@ public class ADLManager {
         publishState("ADL inicializado");
     }
 
-    /**
-     * Deve ser chamado no robotPeriodic()
-     */
     public void periodic() {
 
         HumanIntent intent = intentSource.pollIntent();
         RobotContext context = contextProvider.build();
         double now = Timer.getFPGATimestamp();
 
-        // Nenhuma intenção nova → nada a decidir
         if (intent == null) return;
 
-        // Evita spam de decisões
         if (now - lastDecisionTime < Constants.ADLManager.MIN_DECISION_INTERVAL) {
             return;
         }
