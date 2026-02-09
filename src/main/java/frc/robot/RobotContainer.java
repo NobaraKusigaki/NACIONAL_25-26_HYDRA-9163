@@ -15,8 +15,11 @@ import frc.robot.Dashboards.RobotStress.DashboardPublisherStress;
 import frc.robot.Dashboards.RobotStress.RobotStressController;
 import frc.robot.Dashboards.RobotStress.RobotStressData;
 import frc.robot.Dashboards.RobotStress.RobotStressMonitor;
+import frc.robot.commands.vision.AimAtTagCommand;
+import frc.robot.commands.vision.AlignWithPieceCommand;
 import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
 import frc.robot.subsystems.ScoreSD.Angular.StreamDeckIntakeAngleController;
+import frc.robot.subsystems.Sensors.ViewSubsystem;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
 import java.io.File;
@@ -28,6 +31,8 @@ public class RobotContainer {
   private final SwerveSubsystem drivebase =
       new SwerveSubsystem(
           new File(Filesystem.getDeployDirectory(), "swerve/neo"));
+
+  private final ViewSubsystem vision = new ViewSubsystem();        
 
 // ==================== STREAM DECK ==================== 
 
@@ -88,56 +93,41 @@ private final StreamDeckIntakeAngleController sdIntake =
   private void configureBindings() {
 
 
-    // driver.square().onTrue(
-    //     drivebase.toggleAimLockLime4Command()
-    // );
+   driver.square().whileTrue(
+    new AimAtTagCommand(drivebase, vision)
+);
 
-    // driver.circle().onTrue(
-    //     drivebase.toggleAimLockLime2Command()
-    // );
+driver.circle().whileTrue(
+    new AlignWithPieceCommand(drivebase, vision)
+);
 
-    // driver.triangle().onTrue(
-    //     Commands.runOnce(
-    //         () -> drivebase.beginAlignLime2(
-    //             () -> driver.triangle().getAsBoolean()),
-    //         drivebase
-    //     )
-    // );
-
-    // driver.triangle().onFalse(
-    //     Commands.runOnce(
-    //         drivebase::endAlignLime2,
-    //         drivebase
-    //     )
-    // );
-
-    driver.cross().onTrue(
-        Commands.runOnce(intakeAngle::calibrateZero, intakeAngle)
-    );
+//     driver.cross().onTrue(
+//         Commands.runOnce(intakeAngle::calibrateZero, intakeAngle)
+//     );
     
-    driver.circle().onTrue(
-        Commands.runOnce(intakeAngle::calibrateTarget, intakeAngle)
-    );
+//     driver.circle().onTrue(
+//         Commands.runOnce(intakeAngle::calibrateTarget, intakeAngle)
+//     );
     
-      new Trigger(driver.L2())
-      .whileTrue(
-          Commands.run(intakeAngle::manualUp, intakeAngle)
-      )
-      .onFalse(
-          Commands.runOnce(intakeAngle::stop, intakeAngle)
-      );
+//       new Trigger(driver.L2())
+//       .whileTrue(
+//           Commands.run(intakeAngle::manualUp, intakeAngle)
+//       )
+//       .onFalse(
+//           Commands.runOnce(intakeAngle::stop, intakeAngle)
+//       );
   
-  new Trigger(driver.R2())
-      .whileTrue(
-          Commands.run(intakeAngle::manualDown, intakeAngle)
-      )
-      .onFalse(
-          Commands.runOnce(intakeAngle::stop, intakeAngle)
-      );
+//   new Trigger(driver.R2())
+//       .whileTrue(
+//           Commands.run(intakeAngle::manualDown, intakeAngle)
+//       )
+//       .onFalse(
+//           Commands.runOnce(intakeAngle::stop, intakeAngle)
+//       );
   
-      driver.square().onTrue(
-      Commands.runOnce(intakeAngle::togglePosition, intakeAngle)
-  );
+//       driver.square().onTrue(
+//       Commands.runOnce(intakeAngle::togglePosition, intakeAngle)
+//   );
     
 
   }

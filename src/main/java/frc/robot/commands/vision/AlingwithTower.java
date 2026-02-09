@@ -2,14 +2,14 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.autonomous.named;
+package frc.robot.commands.vision;
 
 import edu.wpi.first.wpilibj2.command.Command;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class Shooter extends Command {
-  /** Creates a new Shooter. */
-  public Shooter() {
+public class AlingwithTower extends Command {
+  /** Creates a new AlingwithTower. */
+  public AlingwithTower() {
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
