@@ -151,7 +151,17 @@ driver.circle().whileTrue(
 
 
   public Command getAutonomousCommand() {
-    return drivebase.getAutonomousCommand("AutoSimple");
+    return new SequentialCommandGroup(
+
+    drivebase.run(() ->
+        drivebase.drive(
+            new Translation2d(-Constants.MAX_SPEED, 0),
+            0
+        )
+    ).withTimeout(2.5),
+
+    drivebase.getAutonomousCommand("AutoSimple")
+  );
   }
 
   public void setMotorBrake(boolean brake) {

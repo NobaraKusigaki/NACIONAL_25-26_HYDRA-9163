@@ -9,9 +9,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ViewSubsystem extends SubsystemBase {
 
-  private Set<Integer> frontAllowedTags = Set.of(0, 0, 0); //OLHA NO MANUAL PRA DEFINIIRRR
-  private Set<Integer> backAllowedTags  = Set.of(0, 0, 0);
-
+  private Set<Integer> frontAllowedTags = Set.of(0, 1, 2); //OLHA NO MANUAL PRA DEFINIIRRR
 
   private final NetworkTable limeFront =
       NetworkTableInstance.getDefault().getTable("limelight-front");
@@ -36,7 +34,7 @@ public class ViewSubsystem extends SubsystemBase {
 
   // ================= LIMELIGHT "BACK" =================
   public boolean hasBackTarget() {
-    return limeBack.getEntry("has_target").getBoolean(false);
+    return limeBack.getEntry("has_target").getBoolean(true);
   }
 
   public double getBackPieceTxRad() {
@@ -51,9 +49,4 @@ public class ViewSubsystem extends SubsystemBase {
   public void setFrontAllowedTags(Set<Integer> ids) {
     frontAllowedTags = ids;
   }
-
-  public void setBackAllowedTags(Set<Integer> ids) {
-    backAllowedTags = ids;
-  }
 }
-
