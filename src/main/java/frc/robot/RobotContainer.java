@@ -15,6 +15,7 @@ import frc.robot.Dashboards.RobotStress.DashboardPublisherStress;
 import frc.robot.Dashboards.RobotStress.RobotStressController;
 import frc.robot.Dashboards.RobotStress.RobotStressData;
 import frc.robot.Dashboards.RobotStress.RobotStressMonitor;
+import frc.robot.autos.NamedCommandsRegistry;
 import frc.robot.commands.vision.AimAtTagCommand;
 import frc.robot.commands.vision.AlignWithPieceCommand;
 import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
@@ -60,6 +61,12 @@ private final StreamDeckIntakeAngleController sdIntake =
   private double driveSpeedScale = 1.0;
 
   public RobotContainer() {
+
+    NamedCommandsRegistry.register(
+      drivebase,
+      vision
+  );
+  
     configureBindings();
     configureDefaultCommands();
     DriverStation.silenceJoystickConnectionWarning(true);
@@ -91,7 +98,6 @@ private final StreamDeckIntakeAngleController sdIntake =
   }
 
   private void configureBindings() {
-
 
    driver.square().whileTrue(
     new AimAtTagCommand(drivebase, vision)
