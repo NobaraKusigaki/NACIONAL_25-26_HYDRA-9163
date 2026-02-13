@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ViewSubsystem extends SubsystemBase {
 
-  private Set<Integer> frontAllowedTags = Set.of(0, 1, 2); //OLHA NO MANUAL PRA DEFINIIRRR
+  private Set<Integer> frontAllowedTags = Set.of(0, 1, 2); //OLHA NO MANUAL PRA DEFINIIRRR 
 
   private final NetworkTable limeFront =
       NetworkTableInstance.getDefault().getTable("limelight-front");

@@ -18,14 +18,14 @@ public class NamedCommandsRegistry {
   ) {
 
     // ========== AUTO BLOCKS ========== 
-    NamedCommands.registerCommand(
-        "GoAndAlign",
-        new AutoGoAndAlign(
-            swerve,
-            vision,
-            new Pose2d() 
-        )
-    );
+    // NamedCommands.registerCommand(
+    //     "GoAndAlign",
+    //     new AutoGoAndAlign(
+    //         swerve,
+    //         vision,
+    //         new Pose2d() 
+    //     )
+    // );
 
     
   }
