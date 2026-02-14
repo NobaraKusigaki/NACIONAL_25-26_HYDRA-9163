@@ -12,6 +12,10 @@ public final class Constants {
   public static final double MAX_SPEED = Units.feetToMeters(12);
     public static final double K_AUTO_PIECE_FORWARD = -0.1;
   public static final double TA_TARGET = 5;
+
+  public static final double MAX_ACCELERATION = 0;
+public static final double MAX_ANGULAR_SPEED = 0;
+public static final double MAX_ANGULAR_ACCELERATION = 0;
   
   public static final class DrivebaseConstants {
     public static final double WHEEL_LOCK_TIME = 10;
@@ -42,7 +46,7 @@ public final class Constants {
     public static final double ANGLE_KV = 0.0;
     public static final double ANGLE_KA = 0.0;
         
-public static final double ANGLE_TOLERANCE_DEG = 1;
+    public static final double ANGLE_TOLERANCE_DEG = 1;
     
     
     public static final String PREF_ENCODER_OFFSET = "Encoder offset Intake Angle";
