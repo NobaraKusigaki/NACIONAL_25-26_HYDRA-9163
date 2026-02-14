@@ -8,6 +8,7 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
@@ -26,8 +27,11 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants;
 import frc.robot.Utils.DriveUtils.AntiTipController;
 import frc.robot.Utils.DriveUtils.SlewLimiter;
+import frc.robot.autonomous.Poses.FieldPoses;
+import frc.robot.commands.drive.PathfindToPose; 
 
 import java.io.File;
+import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -288,4 +292,46 @@ public class SwerveSubsystem extends SubsystemBase {
     }
     return sum;
   }
+
+
+  // ================= HUB LOGIC =================
+
+private Pose2d getClosestHubPose() {
+
+  Pose2d current = getPose();
+
+  Pose2d[] options = {
+      FieldPoses.BLUE_HUB_LEFT,
+      FieldPoses.BLUE_HUB_CENTER,
+      FieldPoses.BLUE_HUB_RIGHT
+  };
+
+  Pose2d closest = options[0];
+  double minDistance = current.getTranslation()
+                              .getDistance(options[0].getTranslation());
+
+  for (Pose2d pose : options) {
+      double distance = current.getTranslation()
+                               .getDistance(pose.getTranslation());
+
+      if (distance < minDistance) {
+          minDistance = distance;
+          closest = pose;
+      }
+  }
+
+  return closest;
+}
+
+public Command goToBestHubShot() {
+  return Commands.defer(
+      () -> new PathfindToPose(this, getClosestHubPose()),
+      Set.of(this)
+  );
+}
+
+public PathConstraints getPathConstraints() {
+  // TODO Auto-generated method stub
+  throw new UnsupportedOperationException("Unimplemented method 'getPathConstraints'");
+}
 }
