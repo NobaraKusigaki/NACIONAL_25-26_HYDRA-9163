@@ -60,6 +60,7 @@ public static final double MAX_ANGULAR_ACCELERATION = 0;
     public static final double LIMELIGHT_HEIGHT = 0.74;   // metros
     public static final double TAG_HEIGHT = 1.041;         // metros
     public static final double LIMELIGHT_ANGLE = Units.degreesToRadians(3);    // inclinação
+    public static double distance4Shoot = 1.5;
 
   }
   public static class PreShooterConstants{

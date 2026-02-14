@@ -1,36 +1,81 @@
 package frc.robot.subsystems.ScoreSD.Shooter;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterManager extends SubsystemBase {
 
+    // ==================== STATES ====================
+    public enum ShooterState {
+        IDLE,
+        SPINNING,
+        AT_SPEED,
+        DISABLED
+    }
+
     private final ShooterSubsystem subShooter;
-    private boolean neoEnabled = false;
+    private ShooterState state = ShooterState.IDLE;
 
     public ShooterManager(ShooterSubsystem subShooter) {
         this.subShooter = subShooter;
     }
 
-    public void toggleShooter() {
-        neoEnabled = !neoEnabled;
+    // ==================== CONTROL ====================
 
-        if (neoEnabled) {
-            subShooter.shoot();
+    public void toggleShooter() {
+        if (state == ShooterState.IDLE) {
+            setState(ShooterState.SPINNING);
         } else {
-            subShooter.stop();
+            setState(ShooterState.IDLE);
         }
     }
 
+    public void disable() {
+        setState(ShooterState.DISABLED);
+    }
+
     public boolean isEnabled() {
-        return neoEnabled;
+        return state == ShooterState.SPINNING || state == ShooterState.AT_SPEED;
     }
 
     public boolean isAtSpeed() {
-        return subShooter.isAtSpeed();
+        return state == ShooterState.AT_SPEED;
     }
+
+    private void setState(ShooterState newState) {
+        if (state == newState) return;
+        state = newState;
+        SmartDashboard.putString("Shooter/State", state.name());
+    }
+
+    // ==================== PERIODIC ====================
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
+
+        switch (state) {
+
+            case SPINNING:
+                subShooter.shoot();
+
+                if (subShooter.isAtSpeed()) {
+                    setState(ShooterState.AT_SPEED);
+                }
+                break;
+
+            case AT_SPEED:
+                subShooter.shoot();
+
+                if (!subShooter.isAtSpeed()) {
+                    setState(ShooterState.SPINNING);
+                }
+                break;
+
+            case DISABLED:
+            case IDLE:
+            default:
+                subShooter.stop();
+                break;
+        }
     }
 }

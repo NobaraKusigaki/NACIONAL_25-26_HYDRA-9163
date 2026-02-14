@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.subsystems.Sensors.ViewSubsystem;
+import frc.robot.Constants;
 import frc.robot.subsystems.ScoreSD.Shooter.ShooterManager;
 
 public class PreShooterManager extends SubsystemBase {
@@ -11,8 +12,8 @@ public class PreShooterManager extends SubsystemBase {
     // ==================== STATES ====================
     public enum PreShooterState {
         IDLE,
-        ARMED,           // Manual feeding
-        AUTO_FEEDING,    // Auto feeding
+        ARMED,           
+        AUTO_FEEDING,    
         DISABLED
     }
 
@@ -81,10 +82,7 @@ public class PreShooterManager extends SubsystemBase {
 
     // ==================== PERIODIC ====================
     @Override
-    public void periodic() {
-
-        System.out.println("mode: " + mode.name() + " | state: " + state.name());
-
+    public void periodic() { 
 
         // ===== AUTO MODE DECISION =====
         if (mode == ControlMode.AUTO_DISTANCE && state != PreShooterState.DISABLED) {
@@ -98,7 +96,7 @@ public class PreShooterManager extends SubsystemBase {
                 double distance = vision.getDistanceToTag();
     
                 boolean correctTag = detectedTag == 22;
-                boolean withinDistance = distance <= 1.7;
+                boolean withinDistance = distance <= Constants.LimelightConstants.distance4Shoot;
                 boolean shooterReady = shooterManager.isAtSpeed();
     
                 if (correctTag && withinDistance && shooterReady) {
