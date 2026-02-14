@@ -4,6 +4,7 @@ import frc.robot.subsystems.ScoreSD.Intake.IntakeManager;
 import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
 import frc.robot.subsystems.ScoreSD.Climb.ClimbManager;
 import frc.robot.subsystems.ScoreSD.PreShooter.PreShooterManager;
+import frc.robot.subsystems.ScoreSD.PreShooter.PreShooterManager.PreShooterState;
 
 public class ADLExecutor {
 
@@ -35,7 +36,7 @@ public class ADLExecutor {
 
             case SCORING:
                 intake.stop();
-                preShooter.arm();   
+                preShooter.toggleManualFeed();   
                 break;
 
             case CLIMBING:
@@ -52,7 +53,7 @@ public class ADLExecutor {
 
             case IDLE:
             default:
-                preShooter.stop();
+                preShooter.setState(PreShooterState.DISABLED);
                 intake.stop();
                 break;
         }

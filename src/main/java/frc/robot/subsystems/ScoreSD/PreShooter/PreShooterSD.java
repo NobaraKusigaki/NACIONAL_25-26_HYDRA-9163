@@ -26,12 +26,12 @@ public class PreShooterSD extends SubsystemBase {
 
         switch (cmd) {
             case "ARM":
-                manager.arm();
+                // manager.arm();
                 break;
 
             case "STOP":
             default:
-                manager.stop();
+                // manager.stop();
                 break;
         }
     }

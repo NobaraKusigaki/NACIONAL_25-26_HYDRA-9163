@@ -10,16 +10,20 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-
 import frc.robot.Dashboards.RobotStress.DashboardPublisherStress;
 import frc.robot.Dashboards.RobotStress.RobotStressController;
 import frc.robot.Dashboards.RobotStress.RobotStressData;
 import frc.robot.Dashboards.RobotStress.RobotStressMonitor;
 import frc.robot.autos.NamedCommandsRegistry;
+import frc.robot.commands.auto_blocks.AutoTaxi;
 import frc.robot.commands.vision.AimAtTagCommand;
 import frc.robot.commands.vision.AlignWithPieceCommand;
 import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
 import frc.robot.subsystems.ScoreSD.Angular.StreamDeckIntakeAngleController;
+import frc.robot.subsystems.ScoreSD.PreShooter.PreShooterManager;
+import frc.robot.subsystems.ScoreSD.PreShooter.PreShooterSubsystem;
+import frc.robot.subsystems.ScoreSD.Shooter.ShooterManager;
+import frc.robot.subsystems.ScoreSD.Shooter.ShooterSubsystem;
 import frc.robot.subsystems.Sensors.ViewSubsystem;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
@@ -33,12 +37,21 @@ public class RobotContainer {
       new SwerveSubsystem(
           new File(Filesystem.getDeployDirectory(), "swerve/neo"));
 
-  private final ViewSubsystem vision = new ViewSubsystem();        
+  private final ViewSubsystem vision = new ViewSubsystem(); 
 
+  private final PreShooterSubsystem preShooterSubsystem;
+  private final PreShooterManager preShooterManager;
+
+  private final ShooterSubsystem shooterSubsystem;
+  private final ShooterManager shooterManager;
+
+  Trigger povUp = driver.povUp();
+  Trigger longPress = povUp.debounce(1.0);
+  
 // ==================== STREAM DECK ==================== 
 
- private final IntakeAngleManager intakeAngle = new IntakeAngleManager();
-private final StreamDeckIntakeAngleController sdIntake =
+  private final IntakeAngleManager intakeAngle = new IntakeAngleManager();
+  private final StreamDeckIntakeAngleController sdIntake =
     new StreamDeckIntakeAngleController(intakeAngle);
 
   
@@ -61,6 +74,12 @@ private final StreamDeckIntakeAngleController sdIntake =
   private double driveSpeedScale = 1.0;
 
   public RobotContainer() {
+
+    shooterSubsystem = new ShooterSubsystem();
+    shooterManager = new ShooterManager(shooterSubsystem);
+
+    preShooterSubsystem = new PreShooterSubsystem();
+    preShooterManager = new PreShooterManager(preShooterSubsystem, vision, shooterManager);
 
     NamedCommandsRegistry.register(
       drivebase,
@@ -99,13 +118,30 @@ private final StreamDeckIntakeAngleController sdIntake =
 
   private void configureBindings() {
 
-   driver.square().whileTrue(
-    new AimAtTagCommand(drivebase, vision)
-);
+    driver.square().whileTrue(
+      new AimAtTagCommand(drivebase, vision)
+    );
 
-driver.circle().whileTrue(
-    new AlignWithPieceCommand(drivebase, vision)
-);
+    driver.circle().whileTrue(
+      new AlignWithPieceCommand(drivebase, vision)
+    );
+
+    longPress.onTrue(
+      Commands.runOnce(() -> preShooterManager.toggleMode())
+    );
+
+    povUp.onTrue(
+      Commands.waitSeconds(0.5)
+          .unless(longPress)
+          .andThen(
+              Commands.runOnce(() -> preShooterManager.toggleManualFeed())
+          )
+    );
+
+    driver.povLeft().onTrue(
+      Commands.runOnce(() -> shooterManager.toggleShooter())
+    );
+
 
 //     driver.cross().onTrue(
 //         Commands.runOnce(intakeAngle::calibrateZero, intakeAngle)
@@ -159,15 +195,11 @@ driver.circle().whileTrue(
   public Command getAutonomousCommand() {
     return new SequentialCommandGroup(
 
-    drivebase.run(() ->
-        drivebase.drive(
-            new Translation2d(-Constants.MAX_SPEED, 0),
-            0
-        )
-    ).withTimeout(2.5),
+    new AutoTaxi(drivebase),
 
     drivebase.getAutonomousCommand("AutoSimple")
-  );
+    
+    );
   }
 
   public void setMotorBrake(boolean brake) {

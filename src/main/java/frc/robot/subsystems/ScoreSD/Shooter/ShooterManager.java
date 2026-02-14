@@ -1,17 +1,36 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems.ScoreSD.Shooter;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterManager extends SubsystemBase {
-  /** Creates a new ShooterManager. */
-  public ShooterManager() {}
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-  }
+    private final ShooterSubsystem subShooter;
+    private boolean neoEnabled = false;
+
+    public ShooterManager(ShooterSubsystem subShooter) {
+        this.subShooter = subShooter;
+    }
+
+    public void toggleShooter() {
+        neoEnabled = !neoEnabled;
+
+        if (neoEnabled) {
+            subShooter.shoot();
+        } else {
+            subShooter.stop();
+        }
+    }
+
+    public boolean isEnabled() {
+        return neoEnabled;
+    }
+
+    public boolean isAtSpeed() {
+        return subShooter.isAtSpeed();
+    }
+
+    @Override
+    public void periodic() {
+        // This method will be called once per scheduler run
+    }
 }

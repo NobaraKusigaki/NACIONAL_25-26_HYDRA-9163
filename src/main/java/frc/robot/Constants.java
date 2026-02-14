@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DutyCycle;
 import swervelib.math.Matter;
 
 public final class Constants {
@@ -26,10 +25,10 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int INTAKE_LEADER_ID = 10; //feito 
+    public static final int INTAKE_LEADER_ID = 10;  //feito 
 
-    public static final int ANGLE_MOTOR_ID = 9; //feito 
-    public static final int ANGLE_ENCODER_ID = 0; //feito 
+    public static final int ANGLE_MOTOR_ID = 9;     //feito 
+    public static final int ANGLE_ENCODER_ID = 0;   //feito 
     
     public static final int MIN_ANGLE_DEG = 0;
     public static final double MAX_ANGLE_DEG = 0;
@@ -53,12 +52,31 @@ public static final double ANGLE_TOLERANCE_DEG = 1;
     public static final double OUTTAKE_POWER = 0.4;
 
   }
+  public static class LimelightConstants {
+    public static final double LIMELIGHT_HEIGHT = 0.74;   // metros
+    public static final double TAG_HEIGHT = 1.041;         // metros
+    public static final double LIMELIGHT_ANGLE = Units.degreesToRadians(3);    // inclinação
+
+  }
   public static class PreShooterConstants{
 
-    public static final int LEADER_ID = 0;
-    public static final int FOLLOWER_ID = 0;
+    public static final int PRE_SHOOTER_ID = 11;
+
+    public static final double FEED_POWER = 1;
     
-    public static final double FEED_POWER = 0;
+  }
+  public static class ShooterConstants{
+
+    public static final int SHOOTER_ID = 12;
+
+    public static final double NEO_kP = 0.0002;
+    public static final double NEO_kI = 0.0;
+    public static final double NEO_kD = 0.0;
+    public static final double NEO_kFF = 0.00018;
+
+    public static final double NEO_TARGET_RPM = 5300;
+
+    public static final double RPM_TOLERANCE = 100;
     
   }
   public static class ADLManager{
