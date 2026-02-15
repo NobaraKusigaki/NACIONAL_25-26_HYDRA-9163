@@ -37,39 +37,39 @@ public final class FieldPoses {
 
 public static final Pose2d BLUE_HUB_LEFT =
 new Pose2d(
-    new Translation2d(7.2, 5.1),        //ESQUERDAAAAAAAAAA
-    Rotation2d.fromDegrees(210)
+    new Translation2d(3.009, 2.513),        //ESQUERDAAAAAAAAAA
+    Rotation2d.fromDegrees(42.797)
 );
 
 public static final Pose2d BLUE_HUB_CENTER = //CENTROOOOOOOOO
 new Pose2d(
-    new Translation2d(13.889, 4.035),
-    Rotation2d.fromDegrees(180)      
+    new Translation2d(3.041, 3.987),
+    Rotation2d.fromDegrees(0.0)      
 );
 
 public static final Pose2d BLUE_HUB_RIGHT =
 new Pose2d(
-    new Translation2d(7.3, 2.9),
-    Rotation2d.fromDegrees(150));   //DIREITAAAAAAAAAAAAA
+    new Translation2d(3.020, 5.052),
+    Rotation2d.fromDegrees(-45.000));   //DIREITAAAAAAAAAAAAA
 
 
-// ======== BLUE HUB SHOOTING POSITIONS ========
+// ======== RED HUB SHOOTING POSITIONS ========
 
-public static final Pose2d RED_HUB_LEFT =
-    new Pose2d(
-        new Translation2d(7.2, 5.1),
-        Rotation2d.fromDegrees(210)
-    );
+// public static final Pose2d RED_HUB_LEFT =
+//     new Pose2d(
+//         new Translation2d(7.2, 5.1),
+//         Rotation2d.fromDegrees(210)
+//     );
 
-public static final Pose2d RED_HUB_CENTER =
-    new Pose2d(
-        new Translation2d(8.0, 4.0),
-        Rotation2d.fromDegrees(180)
-    );
+// public static final Pose2d RED_HUB_CENTER =
+//     new Pose2d(
+//         new Translation2d(8.0, 4.0),
+//         Rotation2d.fromDegrees(180)
+//     );
 
-public static final Pose2d RED_HUB_RIGHT =
-    new Pose2d(
-        new Translation2d(7.3, 2.9),
-        Rotation2d.fromDegrees(150));    
+// public static final Pose2d RED_HUB_RIGHT =
+//     new Pose2d(
+//         new Translation2d(7.3, 2.9),
+//         Rotation2d.fromDegrees(150));    
 
 }

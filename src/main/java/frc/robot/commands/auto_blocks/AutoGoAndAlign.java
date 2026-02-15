@@ -20,18 +20,18 @@ public class AutoGoAndAlign extends SequentialCommandGroup {
 
   public AutoGoAndAlign() {}
   
-  public static Command build (SwerveSubsystem swerve, ViewSubsystem vision, Pose2d targetPose){
-    PathConstraints constraints = new PathConstraints(
-    Constants.MAX_SPEED, 
-    Constants.MAX_ACCELERATION,
-    Constants.MAX_ANGULAR_SPEED,
-    Constants.MAX_ANGULAR_ACCELERATION);
+  // public static Command build (SwerveSubsystem swerve, ViewSubsystem vision, Pose2d targetPose){
+  //   PathConstraints constraints = new PathConstraints(
+  //   Constants.MAX_SPEED, 
+  //   Constants.MAX_ACCELERATION,
+  //   Constants.MAX_ANGULAR_SPEED,
+  //   Constants.MAX_ANGULAR_ACCELERATION);
       
-    return Commands.sequence(
-      PathfindToPose.toPose(targetPose, constraints),
-      new AimAtTagCommand(swerve, vision)
-      );
-  }
+  //   return Commands.sequence(
+  //     PathfindToPose.toPose(targetPose, constraints),
+  //     new AimAtTagCommand(swerve, vision)
+  //     );
+  // }
   
   }
 
