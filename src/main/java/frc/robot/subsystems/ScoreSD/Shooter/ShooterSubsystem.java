@@ -27,7 +27,7 @@ public class ShooterSubsystem extends SubsystemBase {
         SparkMaxConfig config = new SparkMaxConfig();
 
         config.idleMode(IdleMode.kBrake)
-              .inverted(false)
+              .inverted(true)
               .smartCurrentLimit(40);
 
         config.closedLoop

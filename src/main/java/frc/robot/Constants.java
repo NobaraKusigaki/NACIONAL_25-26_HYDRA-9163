@@ -79,7 +79,7 @@ public static final double MAX_ANGULAR_ACCELERATION = 0;
     public static final double NEO_kD = 0.0;
     public static final double NEO_kFF = 0.00018;
 
-    public static final double NEO_TARGET_RPM = 5300;
+    public static final double NEO_TARGET_RPM = 3100;
 
     public static final double RPM_TOLERANCE = 100;
     

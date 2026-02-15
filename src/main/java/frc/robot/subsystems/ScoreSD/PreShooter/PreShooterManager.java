@@ -84,6 +84,8 @@ public class PreShooterManager extends SubsystemBase {
     @Override
     public void periodic() { 
 
+        System.out.println("State: " + state + " | Mode: " + mode);
+
         // ===== AUTO MODE DECISION =====
         if (mode == ControlMode.AUTO_DISTANCE && state != PreShooterState.DISABLED) {
     
@@ -92,8 +94,8 @@ public class PreShooterManager extends SubsystemBase {
                 setState(PreShooterState.IDLE);
             } else {
     
-                int detectedTag = vision.getDetectedTagId();
-                double distance = vision.getDistanceToTag();
+                int detectedTag = 22;
+                double distance = 1.7;
     
                 boolean correctTag = detectedTag == 22;
                 boolean withinDistance = distance <= Constants.LimelightConstants.distance4Shoot;
