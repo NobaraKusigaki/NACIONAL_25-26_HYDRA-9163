@@ -2,31 +2,36 @@ package frc.robot.autos;
 
 import com.pathplanner.lib.auto.NamedCommands;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import frc.robot.commands.auto_blocks.AutoGoAndAlign;
-import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.Sensors.ViewSubsystem;
+import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
+import frc.robot.commands.vision.AimAtTagCommand;
+import frc.robot.autonomous.Poses.FieldPoses;
+import frc.robot.commands.auto_blocks.AutoGoAndAlign;
 
-public class NamedCommandsRegistry {
+public final class NamedCommandsRegistry {
 
-  private NamedCommandsRegistry() {
-  }
+   public static void registerAll(
+        SwerveSubsystem swerve,
+        ViewSubsystem vision) {
 
-  public static void register(
-      SwerveSubsystem swerve,
-      ViewSubsystem vision
-  ) {
+    NamedCommands.registerCommand(
+        "AimAtTag",
+        new AimAtTagCommand(swerve, vision)
+    );
 
-    // ========== AUTO BLOCKS ========== 
-    // NamedCommands.registerCommand(
-    //     "GoAndAlign",
-    //     new AutoGoAndAlign(
-    //         swerve,
-    //         vision,
-    //         new Pose2d() 
-    //     )
-    // );
+    NamedCommands.registerCommand(
+        "GoAndAlignOutpost",
+        new AutoGoAndAlign(
+            swerve,
+            vision,
+            FieldPoses.BLUE_OUTPOST
+        )
+    );
 
-    
-  }
+    NamedCommands.registerCommand(
+        "GoToBestHubShot",
+        swerve.goToBestHubShot()
+    );
+}
+
 }

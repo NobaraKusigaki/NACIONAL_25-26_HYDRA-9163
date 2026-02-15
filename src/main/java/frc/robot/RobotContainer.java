@@ -73,6 +73,9 @@ public class RobotContainer {
 
   private double driveSpeedScale = 1.0;
 
+
+  
+
   public RobotContainer() {
 
     shooterSubsystem = new ShooterSubsystem();
@@ -81,7 +84,7 @@ public class RobotContainer {
     preShooterSubsystem = new PreShooterSubsystem();
     preShooterManager = new PreShooterManager(preShooterSubsystem, vision, shooterManager);
 
-    NamedCommandsRegistry.register(
+    NamedCommandsRegistry.registerAll(
       drivebase,
       vision
   );
@@ -89,6 +92,8 @@ public class RobotContainer {
     configureBindings();
     configureDefaultCommands();
     DriverStation.silenceJoystickConnectionWarning(true);
+
+    
   }
 
   private void configureDefaultCommands() {
@@ -205,4 +210,6 @@ public class RobotContainer {
   public void setMotorBrake(boolean brake) {
     drivebase.setMotorBrake(brake);
   }
+
+  
 }

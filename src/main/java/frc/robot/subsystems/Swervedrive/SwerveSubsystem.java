@@ -294,25 +294,26 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
 
-  // ================= HUB LOGIC =================
+  // ================= HUB =================
 
 private Pose2d getClosestHubPose() {
 
   Pose2d current = getPose();
 
   Pose2d[] options = {
-      FieldPoses.BLUE_HUB_LEFT,
-      FieldPoses.BLUE_HUB_CENTER,
-      FieldPoses.BLUE_HUB_RIGHT
+          FieldPoses.BLUE_HUB_LEFT,
+          FieldPoses.BLUE_HUB_CENTER,
+          FieldPoses.BLUE_HUB_RIGHT
   };
 
   Pose2d closest = options[0];
   double minDistance = current.getTranslation()
-                              .getDistance(options[0].getTranslation());
+          .getDistance(options[0].getTranslation());
 
   for (Pose2d pose : options) {
+
       double distance = current.getTranslation()
-                               .getDistance(pose.getTranslation());
+              .getDistance(pose.getTranslation());
 
       if (distance < minDistance) {
           minDistance = distance;
@@ -324,14 +325,16 @@ private Pose2d getClosestHubPose() {
 }
 
 public Command goToBestHubShot() {
-  return Commands.defer(
-      () -> new PathfindToPose(this, getClosestHubPose()),
-      Set.of(this)
-  );
+  return new PathfindToPose(this, getClosestHubPose());
 }
 
 public PathConstraints getPathConstraints() {
-  // TODO Auto-generated method stub
-  throw new UnsupportedOperationException("Unimplemented method 'getPathConstraints'");
+  return new PathConstraints(
+          3.0, 
+          3.0,  
+          Math.PI, 
+          Math.PI * 2  
+  );
 }
+
 }
