@@ -7,7 +7,7 @@ public class IntakeManager extends SubsystemBase {
 
     public enum IntakeState {
         IDLE,
-        ARMED,        // humano autorizou
+        ARMED,        
         INTAKING,
         OUTTAKING,
         DISABLED      

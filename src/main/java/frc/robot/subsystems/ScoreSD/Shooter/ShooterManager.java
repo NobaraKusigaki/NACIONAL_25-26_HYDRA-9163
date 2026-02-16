@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterManager extends SubsystemBase {
 
-    // ==================== STATES ====================
     public enum ShooterState {
         IDLE,
         SPINNING,
@@ -20,14 +19,25 @@ public class ShooterManager extends SubsystemBase {
         this.subShooter = subShooter;
     }
 
-    // ==================== CONTROL ====================
+    // ==================== CONTROLE ====================
 
-    public void toggleShooter() {
-        if (state == ShooterState.IDLE) {
+    // public void toggleShooter() {
+    //     if (state == ShooterState.IDLE) {
+    //         setState(ShooterState.SPINNING);
+    //     } else {
+    //         setState(ShooterState.IDLE);
+    //     }
+    // }
+
+
+    public void enableShooter() {
+        if (state != ShooterState.DISABLED) {
             setState(ShooterState.SPINNING);
-        } else {
-            setState(ShooterState.IDLE);
         }
+    }
+
+    public void disableShooter() {
+        setState(ShooterState.IDLE);
     }
 
     public void disable() {

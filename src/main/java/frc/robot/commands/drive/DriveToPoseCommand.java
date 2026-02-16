@@ -8,16 +8,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 public class DriveToPoseCommand {
 
   private static final PathConstraints CONSTRAINTS =
-      new PathConstraints(
-          3.0,
-          2.0,
-          3.0,
-          4.0,
-          12.0,
-          false
-      );
-
-      //TEM Q VERIFICAR SE ESSES VALORES BATEM CERTINHOS, COLOQUEI DE MANIERA ALEATORIA, MENOS A VOLTAGEM DA BATERIA
+  new PathConstraints(
+      3.0,          
+      2.5,         
+      Math.PI,      // max angular velocity
+      Math.PI * 2,  // max angular accel
+      12  
+  );
 
   public static Command goTo(Pose2d pose) {
     return AutoBuilder.pathfindToPose(

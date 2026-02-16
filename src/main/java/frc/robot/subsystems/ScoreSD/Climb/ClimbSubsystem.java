@@ -20,13 +20,21 @@ public class ClimbSubsystem extends SubsystemBase {
 
     public ClimbSubsystem() {
 
-        SparkMaxConfig cfg = new SparkMaxConfig();
-          cfg
-            .idleMode(IdleMode.kBrake)
-            .smartCurrentLimit(40);
+        SparkMaxConfig leftConfig  = new SparkMaxConfig();
+        SparkMaxConfig rightConfig = new SparkMaxConfig();
 
-        leftMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        rightMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        leftConfig.idleMode(IdleMode.kBrake)
+           .smartCurrentLimit(40)
+           .inverted(false);
+
+           rightConfig.idleMode(IdleMode.kBrake)
+              .smartCurrentLimit(40)
+                .inverted(true);
+
+        leftMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        resetEncoders();
     }
 
     public void setPower(double power) {
@@ -44,5 +52,10 @@ public class ClimbSubsystem extends SubsystemBase {
             leftMotor.getEncoder().getPosition() +
             rightMotor.getEncoder().getPosition()
         ) / 2.0;
+    }
+
+    public void resetEncoders() {
+        leftMotor.getEncoder().setPosition(0);
+        rightMotor.getEncoder().setPosition(0);
     }
 }

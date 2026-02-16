@@ -8,95 +8,137 @@ import frc.robot.Constants;
 
 public class ClimbManager extends SubsystemBase {
 
-    public enum ClimbPosition {
-        RETRACTED,
-        EXTENDED
-    }
+    public enum PositionState { RETRACTED, EXTENDED }
+    public enum ControlMode { MANUAL, AUTOMATIC, DISABLED }
 
-    private final ClimbSubsystem subsystem;
-    private final PIDController pid;
+    private final ClimbSubsystem io = new ClimbSubsystem();
 
-    private ClimbPosition currentPosition = ClimbPosition.RETRACTED;
-    private boolean moving = false;
-
-    private double minPos;
-    private double maxPos;
-    private double targetPos;
-
-    public ClimbManager() {
-
-        subsystem = new ClimbSubsystem();
-
-        pid = new PIDController(
+    private final PIDController pid =
+        new PIDController(
             Constants.Climb.KP,
             Constants.Climb.KI,
             Constants.Climb.KD
         );
+
+    private ControlMode mode = ControlMode.DISABLED;
+    private PositionState lastPosition = PositionState.RETRACTED;
+
+    private double targetPosition = 0.0;
+
+    private double minPos;
+    private double maxPos;
+
+    public ClimbManager() {
+
         pid.setTolerance(Constants.Climb.TOLERANCE);
 
         minPos = Preferences.getDouble(Constants.Climb.MIN_POS_KEY, 0.0);
         maxPos = Preferences.getDouble(Constants.Climb.MAX_POS_KEY, 0.0);
 
-        SmartDashboard.putString("Climb/Position", currentPosition.name());
+        SmartDashboard.putString("Climb/State", lastPosition.name());
     }
 
-    public void togglePosition() {
+    // ================= MANUAL =================
 
-        if (currentPosition == ClimbPosition.RETRACTED) {
-            moveTo(maxPos);
-            currentPosition = ClimbPosition.EXTENDED;
-        } else {
-            moveTo(minPos);
-            currentPosition = ClimbPosition.RETRACTED;
-        }
-
-        SmartDashboard.putString("Climb/Position", currentPosition.name());
+    public void manualUp() {
+        mode = ControlMode.MANUAL;
+        io.setPower(0.4);
     }
 
-    private void moveTo(double pos) {
-        targetPos = pos;
-        moving = true;
+    public void manualDown() {
+        mode = ControlMode.MANUAL;
+        io.setPower(-0.4);
     }
 
     public void stop() {
-        moving = false;
-        subsystem.stop();
+        io.stop();
+        mode = ControlMode.DISABLED;
     }
 
+    // ================= CALIBRATION =================
+
     public void calibrateRetracted() {
-        minPos = subsystem.getPosition();
+        minPos = io.getPosition();
         Preferences.setDouble(Constants.Climb.MIN_POS_KEY, minPos);
-        SmartDashboard.putString("Climb/Calibration", "RETRACTED calibrado");
     }
 
     public void calibrateExtended() {
-        maxPos = subsystem.getPosition();
+        maxPos = io.getPosition();
         Preferences.setDouble(Constants.Climb.MAX_POS_KEY, maxPos);
-        SmartDashboard.putString("Climb/Calibration", "EXTENDED calibrado");
     }
+
+    // ================= TOGGLE =================
+
+    public void togglePosition() {
+
+        mode = ControlMode.AUTOMATIC;
+
+        if (lastPosition == PositionState.RETRACTED) {
+            targetPosition = maxPos;
+            lastPosition = PositionState.EXTENDED;
+        } else {
+            targetPosition = minPos;
+            lastPosition = PositionState.RETRACTED;
+        }
+
+        SmartDashboard.putString("Climb/State", lastPosition.name());
+    }
+
+    public void moveToExtended() {
+        targetPosition = maxPos;
+        lastPosition = PositionState.EXTENDED;
+        mode = ControlMode.AUTOMATIC;
+    }
+
+    public void moveToRetracted() {
+        targetPosition = minPos;
+        lastPosition = PositionState.RETRACTED;
+        mode = ControlMode.AUTOMATIC;
+    }
+
+    public boolean atTarget() {
+        return pid.atSetpoint();
+    }
+
+    // ================= PERIODIC =================
 
     @Override
     public void periodic() {
-
-        if (!moving) return;
-
-        double current = subsystem.getPosition();
-        double output = pid.calculate(current, targetPos);
-
+    
+        if (mode != ControlMode.AUTOMATIC) return;
+    
+        double current = io.getPosition();
+    
+       
+        if (current >= maxPos && targetPosition > maxPos) {
+            io.stop();
+            mode = ControlMode.DISABLED;
+            return;
+        }
+    
+        // 🔒 PROTEÇÃO DE LIMITE INFERIOR
+        if (current <= minPos && targetPosition < minPos) {
+            io.stop();
+            mode = ControlMode.DISABLED;
+            return;
+        }
+    
+        double output = pid.calculate(current, targetPosition);
+    
         output = Math.max(
             Math.min(output, Constants.Climb.MAX_OUTPUT),
             -Constants.Climb.MAX_OUTPUT
         );
-
-        subsystem.setPower(output);
-
+    
+        io.setPower(output);
+    
         SmartDashboard.putNumber("Climb/Current", current);
-        SmartDashboard.putNumber("Climb/Target", targetPos);
-        SmartDashboard.putNumber("Climb/Output", output);
-
+        SmartDashboard.putNumber("Climb/Target", targetPosition);
+    
         if (pid.atSetpoint()) {
-            subsystem.stop();
-            moving = false;
+            io.stop();
+            mode = ControlMode.DISABLED;
         }
     }
+    
 }

@@ -12,8 +12,8 @@ public class PreShooterManager extends SubsystemBase {
     // ==================== STATES ====================
     public enum PreShooterState {
         IDLE,
-        ARMED,           
-        AUTO_FEEDING,    
+        ARMED,
+        AUTO_FEEDING,
         DISABLED
     }
 
@@ -42,21 +42,38 @@ public class PreShooterManager extends SubsystemBase {
 
     // ==================== MODE CONTROL ====================
 
+    /** Usar no TELEOP se quiser alternar */
     public void toggleMode() {
-        mode = (mode == ControlMode.MANUAL)
-                ? ControlMode.AUTO_DISTANCE
-                : ControlMode.MANUAL;
+        if (mode == ControlMode.MANUAL) {
+            enableAutoDistanceMode();
+        } else {
+            enableManualMode();
+        }
+    }
 
+    /** Usar no AUTÔNOMO */
+    public void enableAutoDistanceMode() {
+        mode = ControlMode.AUTO_DISTANCE;
         setState(PreShooterState.IDLE);
+        SmartDashboard.putString("PreShooter/Mode", mode.name());
+    }
 
+    /** Voltar para modo manual */
+    public void enableManualMode() {
+        mode = ControlMode.MANUAL;
+        setState(PreShooterState.IDLE);
         SmartDashboard.putString("PreShooter/Mode", mode.name());
     }
 
     public ControlMode getMode() {
         return mode;
     }
-
-    // ==================== MANUAL TOGGLE ====================
+    
+    public PreShooterState getState() {
+        return state;
+    }
+    
+    // ==================== MANUAL CONTROL ====================
 
     public void toggleManualFeed() {
 
@@ -67,6 +84,11 @@ public class PreShooterManager extends SubsystemBase {
         } else {
             setState(PreShooterState.ARMED);
         }
+    }
+
+    /** Força parada segura (usar no fim do auto) */
+    public void forceStop() {
+        setState(PreShooterState.IDLE);
     }
 
     public void disable(String reason) {
@@ -82,41 +104,49 @@ public class PreShooterManager extends SubsystemBase {
 
     // ==================== PERIODIC ====================
     @Override
-    public void periodic() { 
+    public void periodic() {
 
-        System.out.println("State: " + state + " | Mode: " + mode);
-
-        // ===== AUTO MODE DECISION =====
+        // ===== AUTO MODE =====
         if (mode == ControlMode.AUTO_DISTANCE && state != PreShooterState.DISABLED) {
-    
-            // Corte imediato se shooter desligar
+
+            // Shooter desligado? não alimenta.
             if (!shooterManager.isEnabled()) {
                 setState(PreShooterState.IDLE);
             } else {
-    
-                int detectedTag = 22;
-                double distance = 1.7;
-    
-                boolean correctTag = detectedTag == 22;
-                boolean withinDistance = distance <= Constants.LimelightConstants.distance4Shoot;
+
+                int detectedTag = vision.getDetectedTagId();
+                double distance = vision.getDistanceToTag();
+
+                boolean correctTag = vision.isFrontTagAllowed();
+
+                double targetDistance = Constants.LimelightConstants.distance4Shoot;
+                double tolerance = 0.05; // 5cm
+
+                boolean withinDistance =
+                    Math.abs(distance - targetDistance) <= tolerance;
+
+                double angularToleranceRad = Math.toRadians(1.5);
+                boolean aligned =
+                    Math.abs(vision.getFrontTxRad()) <= angularToleranceRad;
+
                 boolean shooterReady = shooterManager.isAtSpeed();
-    
-                if (correctTag && withinDistance && shooterReady) {
+
+                if (correctTag && withinDistance && aligned && shooterReady) {
                     setState(PreShooterState.AUTO_FEEDING);
                 } else {
                     setState(PreShooterState.IDLE);
                 }
             }
         }
-    
-        // ===== EXECUTION BASED ON STATE =====
+
+        // ===== EXECUÇÃO =====
         switch (state) {
-    
+
             case ARMED:
             case AUTO_FEEDING:
                 subPreShooter.feed();
                 break;
-    
+
             case DISABLED:
             case IDLE:
             default:
@@ -124,4 +154,4 @@ public class PreShooterManager extends SubsystemBase {
                 break;
         }
     }
-}    
+}

@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DigitalSource;
 import swervelib.math.Matter;
 
 public final class Constants {
@@ -10,13 +11,9 @@ public final class Constants {
   public static final Matter CHASSIS = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
   public static final double LOOP_TIME = 0.13;
   public static final double MAX_SPEED = Units.feetToMeters(12);
-    public static final double K_AUTO_PIECE_FORWARD = -0.1;
+  public static final double K_AUTO_PIECE_FORWARD = -0.1;
   public static final double TA_TARGET = 5;
 
-  public static final double MAX_ACCELERATION = 0;
-public static final double MAX_ANGULAR_SPEED = 0;
-public static final double MAX_ANGULAR_ACCELERATION = 0;
-  
   public static final class DrivebaseConstants {
     public static final double WHEEL_LOCK_TIME = 10;
   }
@@ -93,7 +90,7 @@ public static final double MAX_ANGULAR_ACCELERATION = 0;
     public static final double KI = 0.0;
     public static final double KD = 0.0;
 
-    public static final double TOLERANCE = 0;
+    public static final double TOLERANCE = 1;
 
     public static final String MIN_POS_KEY = "Climb/MinPos";
     public static final String MAX_POS_KEY = "Climb/MaxPos";
@@ -101,6 +98,13 @@ public static final double MAX_ANGULAR_ACCELERATION = 0;
     
     public static final int LEFT_MOTOR_ID = 0;
     public static final int RIGHT_MOTOR_ID = 0;
+  }
+
+  public static class SpindexerConstants {
+    public static final int spinStarMotorPort = 13;
+    public static double spinPower;
+    
+    public static int indexerEncoderPort = 1;
   }
 
 }

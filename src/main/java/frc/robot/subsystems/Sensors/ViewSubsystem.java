@@ -10,7 +10,17 @@ import frc.robot.Constants;
 
 public class ViewSubsystem extends SubsystemBase {
 
-  // private Set<Integer> frontAllowedTags = Set.of(0, 1, 2); // AINDA NÃO UTILIZADO
+  private Set<Integer> allowedFrontTags = Set.of();
+
+public void setAllowedFrontTags(Set<Integer> tags) {
+    allowedFrontTags = tags;
+}
+
+public boolean isFrontTagAllowed() {
+    int id = getDetectedTagId();
+    return allowedFrontTags.contains(id);
+}
+
 
   private final NetworkTable limeFront =
       NetworkTableInstance.getDefault().getTable("limelight-front");
@@ -69,8 +79,5 @@ public class ViewSubsystem extends SubsystemBase {
   public double getBackTa() {
     return limeBack.getEntry("ta").getDouble(0.0);
   }
- // ================= CONFIGURAÇÃO  =================
-  // public void setFrontAllowedTags(Set<Integer> ids) {
-  //   frontAllowedTags = ids;
-  // }
+ 
 }

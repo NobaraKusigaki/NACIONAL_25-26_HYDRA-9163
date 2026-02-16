@@ -330,10 +330,10 @@ public Command goToBestHubShot() {
 
 public PathConstraints getPathConstraints() {
   return new PathConstraints(
-          3.0, 
-          3.0,  
-          Math.PI, 
-          Math.PI * 2  
+      3.0,
+      2.5,
+      Math.PI,
+      Math.PI * 2
   );
 }
 
