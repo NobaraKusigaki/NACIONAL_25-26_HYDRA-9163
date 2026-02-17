@@ -1,157 +1,99 @@
-package frc.robot.subsystems.ScoreSD.PreShooter;
+// package frc.robot.subsystems.ScoreSD.PreShooter;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+// import edu.wpi.first.math.MathUtil;
+// import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+// import edu.wpi.first.wpilibj2.command.SubsystemBase;
+// import frc.robot.Constants;
+// import frc.robot.subsystems.ScoreSD.Shooter.ShooterManager;
+// import frc.robot.subsystems.Sensors.ViewSubsystem;
 
-import frc.robot.subsystems.Sensors.ViewSubsystem;
-import frc.robot.Constants;
-import frc.robot.subsystems.ScoreSD.Shooter.ShooterManager;
+// public class PreShooterManager extends SubsystemBase {
 
-public class PreShooterManager extends SubsystemBase {
+//     public enum State {
+//         IDLE,
+//         AUTO_FEEDING,
+//         MANUAL_FEED,
+//         DISABLED
+//     }
 
-    // ==================== STATES ====================
-    public enum PreShooterState {
-        IDLE,
-        ARMED,
-        AUTO_FEEDING,
-        DISABLED
-    }
+//     private State state = State.IDLE;
 
-    // ==================== MODES ====================
-    public enum ControlMode {
-        MANUAL,
-        AUTO_DISTANCE
-    }
+//     private final PreShooterSubsystem preShooter;
+//     private final ViewSubsystem vision;
+//     private final ShooterManager shooter;
 
-    private final PreShooterSubsystem subPreShooter;
-    private final ViewSubsystem vision;
-    private final ShooterManager shooterManager;
+//     private int lastTag = -1;
 
-    private PreShooterState state = PreShooterState.IDLE;
-    private ControlMode mode = ControlMode.MANUAL;
+//     public PreShooterManager(
+//         PreShooterSubsystem preShooter,
+//         ViewSubsystem vision,
+//         ShooterManager shooter
+//     ) {
+//         this.preShooter = preShooter;
+//         this.vision = vision;
+//         this.shooter = shooter;
+//     }
 
-    public PreShooterManager(
-        PreShooterSubsystem subPreShooter,
-        ViewSubsystem vision,
-        ShooterManager shooterManager
-    ) {
-        this.subPreShooter = subPreShooter;
-        this.vision = vision;
-        this.shooterManager = shooterManager;
-    }
+//     public void enableAuto() {
+//         state = State.IDLE;
+//     }
 
-    // ==================== MODE CONTROL ====================
+//     public void manualFeed() {
+//         state = State.MANUAL_FEED;
+//     }
 
-    /** Usar no TELEOP se quiser alternar */
-    public void toggleMode() {
-        if (mode == ControlMode.MANUAL) {
-            enableAutoDistanceMode();
-        } else {
-            enableManualMode();
-        }
-    }
+//     public void stop() {
+//         state = State.IDLE;
+//     }
 
-    /** Usar no AUTÔNOMO */
-    public void enableAutoDistanceMode() {
-        mode = ControlMode.AUTO_DISTANCE;
-        setState(PreShooterState.IDLE);
-        SmartDashboard.putString("PreShooter/Mode", mode.name());
-    }
+//     @Override
+//     public void periodic() {
 
-    /** Voltar para modo manual */
-    public void enableManualMode() {
-        mode = ControlMode.MANUAL;
-        setState(PreShooterState.IDLE);
-        SmartDashboard.putString("PreShooter/Mode", mode.name());
-    }
+//         if (state == State.DISABLED) {
+//             preShooter.stop();
+//             return;
+//         }
 
-    public ControlMode getMode() {
-        return mode;
-    }
-    
-    public PreShooterState getState() {
-        return state;
-    }
-    
-    // ==================== MANUAL CONTROL ====================
+//         int detected = vision.getDetectedTagId();
+//         if (detected != -1)
+//             lastTag = detected;
 
-    public void toggleManualFeed() {
+//         // boolean tagValid =
+//         //     vision.getFrontAllowedTags().contains(lastTag);
 
-        if (mode != ControlMode.MANUAL) return;
+//         boolean aligned =
+//             Math.abs(vision.getFrontTxRad())
+//             < Math.toRadians(1.2);
 
-        if (state == PreShooterState.ARMED) {
-            setState(PreShooterState.IDLE);
-        } else {
-            setState(PreShooterState.ARMED);
-        }
-    }
+//         double distance = vision.getDistanceToTag();
 
-    /** Força parada segura (usar no fim do auto) */
-    public void forceStop() {
-        setState(PreShooterState.IDLE);
-    }
+//         boolean validDistance =
+//             distance > 0.1 &&
+//             Math.abs(distance - Constants.LimelightConstants.distance4Shoot)
+//             < 0.20;
 
-    public void disable(String reason) {
-        setState(PreShooterState.DISABLED);
-        SmartDashboard.putString("PreShooter/DisabledReason", reason);
-    }
+//         boolean shooterReady = shooter.isAtSpeed();
 
-    public void setState(PreShooterState newState) {
-        if (state == newState) return;
-        state = newState;
-        SmartDashboard.putString("PreShooter/State", state.name());
-    }
+//         if (state == State.MANUAL_FEED) {
+//             preShooter.feed();
+//             return;
+//         }
 
-    // ==================== PERIODIC ====================
-    @Override
-    public void periodic() {
+//         // if (tagValid && aligned && shooterReady && validDistance) {
+//         //     state = State.AUTO_FEEDING;
+//         } else {
+//             state = State.IDLE;
+//         }
 
-        // ===== AUTO MODE =====
-        if (mode == ControlMode.AUTO_DISTANCE && state != PreShooterState.DISABLED) {
+//         switch (state) {
+//             case AUTO_FEEDING:
+//                 preShooter.feed();
+//                 break;
+//             default:
+//                 preShooter.stop();
+//                 break;
+//         }
 
-            // Shooter desligado? não alimenta.
-            if (!shooterManager.isEnabled()) {
-                setState(PreShooterState.IDLE);
-            } else {
-
-                int detectedTag = vision.getDetectedTagId();
-                double distance = vision.getDistanceToTag();
-
-                boolean correctTag = vision.isFrontTagAllowed();
-
-                double targetDistance = Constants.LimelightConstants.distance4Shoot;
-                double tolerance = 0.05; // 5cm
-
-                boolean withinDistance =
-                    Math.abs(distance - targetDistance) <= tolerance;
-
-                double angularToleranceRad = Math.toRadians(1.5);
-                boolean aligned =
-                    Math.abs(vision.getFrontTxRad()) <= angularToleranceRad;
-
-                boolean shooterReady = shooterManager.isAtSpeed();
-
-                if (correctTag && withinDistance && aligned && shooterReady) {
-                    setState(PreShooterState.AUTO_FEEDING);
-                } else {
-                    setState(PreShooterState.IDLE);
-                }
-            }
-        }
-
-        // ===== EXECUÇÃO =====
-        switch (state) {
-
-            case ARMED:
-            case AUTO_FEEDING:
-                subPreShooter.feed();
-                break;
-
-            case DISABLED:
-            case IDLE:
-            default:
-                subPreShooter.stop();
-                break;
-        }
-    }
-}
+//         SmartDashboard.putString("PreShooter/State", state.name());
+//     }
+// }

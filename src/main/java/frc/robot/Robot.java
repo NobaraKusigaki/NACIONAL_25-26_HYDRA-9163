@@ -18,11 +18,11 @@ import org.littletonrobotics.junction.Logger;
 
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
-  private final RobotContainer robotContainer;
+  //private final RobotContainer robotContainer;
 
   public Robot() {
    
-    robotContainer = new RobotContainer();
+    //robotContainer = new RobotContainer();
  
   }
 
@@ -58,7 +58,7 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().run();
     Logger.recordOutput("Robot/LoopTimeSec", edu.wpi.first.wpilibj.Timer.getFPGATimestamp() );
     
-    robotContainer.updateDashboards();
+    //robotContainer.updateDashboards();
    
   }
 
@@ -71,7 +71,7 @@ public class Robot extends LoggedRobot {
   
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = robotContainer.getAutonomousCommand();
+    //m_autonomousCommand = robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {

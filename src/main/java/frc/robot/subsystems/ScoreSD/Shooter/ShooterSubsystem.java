@@ -8,7 +8,6 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.RelativeEncoder;
-
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -17,8 +16,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private final SparkMax neoMotor =
         new SparkMax(Constants.ShooterConstants.SHOOTER_ID, MotorType.kBrushless);
 
-    private final SparkClosedLoopController neoController;
-    private final RelativeEncoder neoEncoder;
+    private final SparkClosedLoopController controller;
+    private final RelativeEncoder encoder;
 
     private double targetRPM = 0.0;
 
@@ -44,43 +43,34 @@ public class ShooterSubsystem extends SubsystemBase {
             PersistMode.kPersistParameters
         );
 
-        neoController = neoMotor.getClosedLoopController();
-        neoEncoder = neoMotor.getEncoder();
+        controller = neoMotor.getClosedLoopController();
+        encoder = neoMotor.getEncoder();
     }
-
-    // ==================== CONTROLE ====================
 
     public void setTargetRPM(double rpm) {
         targetRPM = rpm;
 
-        neoController.setReference(
+        controller.setReference(
             rpm,
             SparkMax.ControlType.kVelocity
         );
     }
 
-    public void shoot() {
-        setTargetRPM(Constants.ShooterConstants.NEO_TARGET_RPM);
-    }
-
     public void stop() {
-        targetRPM = 0.0;
+        targetRPM = 0;
         neoMotor.stopMotor();
     }
 
-    // ==================== TELEMETRIA ====================
-
     public double getCurrentRPM() {
-        return neoEncoder.getVelocity();
+        return encoder.getVelocity();
+    }
+
+    public double getTargetRPM() {
+        return targetRPM;
     }
 
     public boolean isAtSpeed() {
         return Math.abs(getCurrentRPM() - targetRPM)
-                < Constants.ShooterConstants.RPM_TOLERANCE;
-    }
-
-    @Override
-    public void periodic() {
-        // Pode adicionar SmartDashboard ou Logger aqui se quiser
+            < Constants.ShooterConstants.RPM_TOLERANCE;
     }
 }
