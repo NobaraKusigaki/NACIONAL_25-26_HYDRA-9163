@@ -1,6 +1,4 @@
 // package frc.robot.subsystems.ScoreSD.PreShooter;
-
-// import edu.wpi.first.math.MathUtil;
 // import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj2.command.SubsystemBase;
 // import frc.robot.Constants;
@@ -11,8 +9,8 @@
 
 //     public enum State {
 //         IDLE,
+//         MANUAL_ARMED,
 //         AUTO_FEEDING,
-//         MANUAL_FEED,
 //         DISABLED
 //     }
 
@@ -21,8 +19,6 @@
 //     private final PreShooterSubsystem preShooter;
 //     private final ViewSubsystem vision;
 //     private final ShooterManager shooter;
-
-//     private int lastTag = -1;
 
 //     public PreShooterManager(
 //         PreShooterSubsystem preShooter,
@@ -34,17 +30,40 @@
 //         this.shooter = shooter;
 //     }
 
-//     public void enableAuto() {
-//         state = State.IDLE;
+//     // ================= TELEOP =================
+
+//     public void toggleMode() {
+//         if (state == State.MANUAL_ARMED) {
+//             state = State.IDLE;
+//         } else {
+//             state = State.MANUAL_ARMED;
+//         }
 //     }
 
-//     public void manualFeed() {
-//         state = State.MANUAL_FEED;
+//     public void toggleManualFeed() {
+//         if (state == State.MANUAL_ARMED) {
+//             state = State.IDLE;
+//         } else {
+//             state = State.MANUAL_ARMED;
+//         }
+//     }
+
+//     // ================= AUTO =================
+
+//     public void enableAuto() {
+//         state = State.IDLE; 
 //     }
 
 //     public void stop() {
 //         state = State.IDLE;
+//         preShooter.stop();
 //     }
+
+//     public State getState() {
+//         return state;
+//     }
+
+//     // ================= PERIODIC =================
 
 //     @Override
 //     public void periodic() {
@@ -54,13 +73,14 @@
 //             return;
 //         }
 
-//         int detected = vision.getDetectedTagId();
-//         if (detected != -1)
-//             lastTag = detected;
+//         // ===== MANUAL MODE =====
+//         if (state == State.MANUAL_ARMED) {
+//             preShooter.feed();
+//             return;
+//         }
 
-//         // boolean tagValid =
-//         //     vision.getFrontAllowedTags().contains(lastTag);
-
+//         // ===== AUTO MODE =====
+//         boolean tagValid = vision.hasValidFrontTarget();
 //         boolean aligned =
 //             Math.abs(vision.getFrontTxRad())
 //             < Math.toRadians(1.2);
@@ -68,30 +88,23 @@
 //         double distance = vision.getDistanceToTag();
 
 //         boolean validDistance =
-//             distance > 0.1 &&
-//             Math.abs(distance - Constants.LimelightConstants.distance4Shoot)
+//             distance != Double.MAX_VALUE &&
+//             Math.abs(distance -
+//             Constants.LimelightConstants.distance4Shoot)
 //             < 0.20;
 
 //         boolean shooterReady = shooter.isAtSpeed();
 
-//         if (state == State.MANUAL_FEED) {
-//             preShooter.feed();
-//             return;
-//         }
-
-//         // if (tagValid && aligned && shooterReady && validDistance) {
-//         //     state = State.AUTO_FEEDING;
+//         if (tagValid && aligned && shooterReady && validDistance) {
+//             state = State.AUTO_FEEDING;
 //         } else {
 //             state = State.IDLE;
 //         }
 
-//         switch (state) {
-//             case AUTO_FEEDING:
-//                 preShooter.feed();
-//                 break;
-//             default:
-//                 preShooter.stop();
-//                 break;
+//         if (state == State.AUTO_FEEDING) {
+//             preShooter.feed();
+//         } else {
+//             preShooter.stop();
 //         }
 
 //         SmartDashboard.putString("PreShooter/State", state.name());

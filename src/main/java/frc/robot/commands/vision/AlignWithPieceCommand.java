@@ -1,53 +1,53 @@
-package frc.robot.commands.vision;
+// package frc.robot.commands.vision;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
-import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
-import frc.robot.subsystems.Sensors.ViewSubsystem;
+// import edu.wpi.first.math.MathUtil;
+// import edu.wpi.first.math.geometry.Translation2d;
+// import edu.wpi.first.wpilibj2.command.Command;
+// import frc.robot.Constants;
+// import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
+// import frc.robot.subsystems.Sensors.ViewSubsystem;
 
-public class AlignWithPieceCommand extends Command{
+// public class AlignWithPieceCommand extends Command{
 
-  private final SwerveSubsystem swerve;
-  private final ViewSubsystem vision;
+//   private final SwerveSubsystem swerve;
+//   private final ViewSubsystem vision;
 
-  public AlignWithPieceCommand(SwerveSubsystem swerve, ViewSubsystem vision) {
-    this.swerve = swerve;
-    this.vision = vision;
-    addRequirements(swerve);
-  }
+//   public AlignWithPieceCommand(SwerveSubsystem swerve, ViewSubsystem vision) {
+//     this.swerve = swerve;
+//     this.vision = vision;
+//     addRequirements(swerve);
+//   }
 
-  @Override
-  public void execute() {
-    if (!vision.hasBackTarget()) {
-      swerve.stop();
-      return;
-    }
+//   @Override
+//   public void execute() {
+//     if (!vision.hasBackTarget()) {
+//       swerve.stop();
+//       return;
+//     }
 
-    double rot =
-        swerve.getHeadingPID().calculate(
-            0.0,
-            -vision.getBackPieceTxRad());
+//     double rot =
+//         swerve.getHeadingPID().calculate(
+//             0.0,
+//             -vision.getBackPieceTxRad());
 
-    double forward =
-        Constants.K_AUTO_PIECE_FORWARD *
-        (Constants.TA_TARGET - vision.getBackTa());
+//     double forward =
+//         Constants.K_AUTO_PIECE_FORWARD *
+//         (Constants.TA_TARGET - vision.getBackTa());
 
-    forward =
-        MathUtil.clamp(
-            forward,
-            -Constants.MAX_SPEED,
-            Constants.MAX_SPEED);
+//     forward =
+//         MathUtil.clamp(
+//             forward,
+//             -Constants.MAX_SPEED,
+//             Constants.MAX_SPEED);
 
-    swerve.drive(
-        new Translation2d(forward, 0),
-        rot
-    );
-  }
+//     swerve.drive(
+//         new Translation2d(forward, 0),
+//         rot
+//     );
+//   }
 
-  @Override
-  public void end(boolean interrupted) {
-    swerve.stop();
-  }
-}
+//   @Override
+//   public void end(boolean interrupted) {
+//     swerve.stop();
+//   }
+// }

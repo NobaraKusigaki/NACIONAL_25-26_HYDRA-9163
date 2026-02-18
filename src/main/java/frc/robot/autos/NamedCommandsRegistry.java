@@ -41,7 +41,7 @@
 //     NamedCommands.registerCommand(
 //     "SpinUpShooter",
 //     Commands.runOnce(
-//         shooterManager::enableShooter,
+//         shooterManager::enable,
 //         shooterManager
 //     )
 // );

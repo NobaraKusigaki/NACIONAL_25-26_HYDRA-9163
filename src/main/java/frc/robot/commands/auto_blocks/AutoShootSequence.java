@@ -15,38 +15,40 @@
 
 //         addCommands(
 
-//             // Ativa modo automático de distância
-//             Commands.runOnce(
-//                 preShooterManager::enableAutoDistanceMode,
-//                 preShooterManager
-//             ),
+//     Commands.runOnce(
+//         shooterManager::enable,
+//         shooterManager
+//     ),
 
-//             // Espera PreShooter começar a alimentar
-//             Commands.waitUntil(() ->
-//             preShooterManager.getState() ==
-//             PreShooterManager.PreShooterState.AUTO_FEEDING)
-//             .withTimeout(2.0),
-        
+//     Commands.runOnce(
+//         preShooterManager::enableAuto,
+//         preShooterManager
+//     ),
 
-//             // Gira spindexer 3 voltas
-//             Commands.runOnce(
-//                 spindexerManager::spinThreeFromReference,
-//                 spindexerManager
-//             ),
+//     Commands.waitUntil(shooterManager::isAtSpeed)
+//         .withTimeout(2.5),
 
-//             // Espera terminar as 3 voltas
-//             Commands.waitUntil(() ->
-//             spindexerManager.getState() ==
-//             SpindexerManager.SpindexerState.HOLDING)
-//             .withTimeout(3.0),
+//     Commands.waitUntil(() ->
+//         preShooterManager.getState() ==
+//         PreShooterManager.State.AUTO_FEEDING
+//     ).withTimeout(2.0),
 
+//     Commands.runOnce(
+//         spindexerManager::spinThreeFromReference,
+//         spindexerManager
+//     ),
 
-//             // Desliga tudo
-//             Commands.runOnce(() -> {
-//                 preShooterManager.forceStop();
-//                 shooterManager.disableShooter();
-//                 spindexerManager.stop();
-//             })
-//         );
-//     }
+//     Commands.waitUntil(() ->
+//         spindexerManager.getState() ==
+//         SpindexerManager.SpindexerState.HOLDING
+//     ).withTimeout(3.0),
+
+//     Commands.runOnce(() -> {
+//         preShooterManager.stop();
+//         shooterManager.disable();
+//         spindexerManager.stop();
+//     })
+// );
+
+// }
 // }

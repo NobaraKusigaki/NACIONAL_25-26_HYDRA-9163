@@ -4,7 +4,6 @@
 // import frc.robot.subsystems.ScoreSD.Angular.IntakeAngleManager;
 // import frc.robot.subsystems.ScoreSD.Climb.ClimbManager;
 // import frc.robot.subsystems.ScoreSD.PreShooter.PreShooterManager;
-// import frc.robot.subsystems.ScoreSD.PreShooter.PreShooterManager.PreShooterState;
 
 // public class ADLExecutor {
 
@@ -39,23 +38,24 @@
 //                 preShooter.toggleManualFeed();   
 //                 break;
 
-//             case CLIMBING:
-//                 intake.disable("Climb ativo");
-//                 preShooter.disable("Climb ativo");
+//                 case CLIMBING:
+//                 intake.stop();
+//                 preShooter.stop();
 //                 climb.togglePosition();
 //                 break;
-
+            
 //             case EMERGENCY:
-//                 intake.disable("Emergência");
-//                 preShooter.disable("Emergência");
+//                 intake.stop();
+//                 preShooter.stop();
 //                 climb.stop();
 //                 break;
-
+            
 //             case IDLE:
 //             default:
-//                 preShooter.setState(PreShooterState.DISABLED);
 //                 intake.stop();
+//                 preShooter.stop();
 //                 break;
+            
 //         }
 //     }
 // }

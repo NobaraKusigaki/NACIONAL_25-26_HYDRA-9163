@@ -90,7 +90,7 @@
 //   public RobotContainer() {
 
 //     shooterSubsystem = new ShooterSubsystem();
-//     shooterManager = new ShooterManager(shooterSubsystem);
+//     shooterManager = new ShooterManager(shooterSubsystem, vision);
 
 //     preShooterSubsystem = new PreShooterSubsystem();
 
