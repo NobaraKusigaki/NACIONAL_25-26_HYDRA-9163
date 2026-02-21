@@ -21,6 +21,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
@@ -128,12 +129,11 @@ public class SwerveSubsystem extends SubsystemBase {
   // PERIODIC
   // =========================================================
   @Override
-  public void periodic() {
+  public void periodic() { 
     desiredPub.set(swerveDrive.getStates());
     rotationPub.set(swerveDrive.getPose().getRotation());
 
     Logger.recordOutput("swerve/pose", swerveDrive.getPose());
-    Logger.recordOutput("swerve/modules", swerveDrive.getModulePositions());
   }
 
   // =========================================================
