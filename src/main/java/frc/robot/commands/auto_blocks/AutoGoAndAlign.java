@@ -5,20 +5,21 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.commands.vision.AimAtTagCommand;
+import frc.robot.commands.vision.AimAtTagCommand.CameraSide;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.Sensors.ViewSubsystem;
 
 public class AutoGoAndAlign extends SequentialCommandGroup {
 
-    public AutoGoAndAlign(
-            SwerveSubsystem swerve,
-            ViewSubsystem vision,
-            Pose2d targetPose) {
+  public AutoGoAndAlign(
+      SwerveSubsystem swerve,
+      ViewSubsystem vision,
+      Pose2d targetPose,
+      CameraSide side) {
 
-        addCommands(
-                new PathfindToPose(swerve, targetPose),
-                new AimAtTagCommand(swerve, vision)
-
-        );
-    }
+    addCommands(
+        new PathfindToPose(swerve, targetPose),
+        new AimAtTagCommand(swerve, vision, side)
+    );
+  }
 }

@@ -116,7 +116,6 @@ public class ClimbManager extends SubsystemBase {
             return;
         }
     
-        // 🔒 PROTEÇÃO DE LIMITE INFERIOR
         if (current <= minPos && targetPosition < minPos) {
             io.stop();
             mode = ControlMode.DISABLED;

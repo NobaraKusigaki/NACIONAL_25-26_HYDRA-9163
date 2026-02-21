@@ -3,16 +3,20 @@ package frc.robot.commands.vision;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+
 import frc.robot.Constants;
 import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.Sensors.ViewSubsystem;
 
-public class AlignWithPieceCommand extends Command{
+public class AlignWithPieceCommand extends Command {
 
   private final SwerveSubsystem swerve;
   private final ViewSubsystem vision;
 
-  public AlignWithPieceCommand(SwerveSubsystem swerve, ViewSubsystem vision) {
+  public AlignWithPieceCommand(
+      SwerveSubsystem swerve,
+      ViewSubsystem vision) {
+
     this.swerve = swerve;
     this.vision = vision;
     addRequirements(swerve);
@@ -20,6 +24,7 @@ public class AlignWithPieceCommand extends Command{
 
   @Override
   public void execute() {
+
     if (!vision.hasBackTarget()) {
       swerve.stop();
       return;
@@ -27,18 +32,20 @@ public class AlignWithPieceCommand extends Command{
 
     double rot =
         swerve.getHeadingPID().calculate(
-            0.0,
-            -vision.getBackPieceTxRad());
+            vision.getBackTxRad(),
+            0.0
+        );
 
     double forward =
         Constants.K_AUTO_PIECE_FORWARD *
-        (Constants.TA_TARGET - vision.getBackTa());
+        (Constants.TA_TARGET -
+         vision.getBackDistanceToTag());
 
-    forward =
-        MathUtil.clamp(
-            forward,
-            -Constants.MAX_SPEED,
-            Constants.MAX_SPEED);
+    forward = MathUtil.clamp(
+        forward,
+        -Constants.MAX_SPEED,
+        Constants.MAX_SPEED
+    );
 
     swerve.drive(
         new Translation2d(forward, 0),

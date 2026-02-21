@@ -1,106 +1,111 @@
-// package frc.robot.subsystems.ScoreSD.Shooter;
+package frc.robot.subsystems.ScoreSD.Shooter;
 
-// import edu.wpi.first.math.MathUtil;
-// import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-// import edu.wpi.first.wpilibj2.command.SubsystemBase;
-// import frc.robot.subsystems.Sensors.ViewSubsystem;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.Sensors.ViewSubsystem;
 
-// public class ShooterManager extends SubsystemBase {
+public class ShooterManager extends SubsystemBase {
 
-//     public enum ShooterState {
-//         IDLE,
-//         SPINNING,
-//         AT_SPEED,
-//         DISABLED
-//     }
+    public enum ShooterState {
+        IDLE,
+        SPINNING,
+        AT_SPEED,
+        DISABLED
+    }
 
-//     private ShooterState state = ShooterState.IDLE;
+    private ShooterState state = ShooterState.IDLE;
 
-//     private final ShooterSubsystem shooter;
-//     private final ViewSubsystem vision;
+    private final ShooterSubsystem shooter;
+    private final ViewSubsystem vision;
 
-//     private double lastValidDistance = 2.0;
+    private double lastValidDistance = 2.0;
 
-//     private final double[] distances = {1.0, 2.0, 2.5, 3.0, 3.5, 4.0};
-//     private final double[] rpms      = {3400, 3700, 4000, 4300, 4600, 5000};
+    private final double[] distances = {1.0, 2.0, 2.5, 3.0, 3.5, 4.0};
+    private final double[] rpms      = {3400, 3700, 4000, 4300, 4600, 5000};
 
-//     public ShooterManager(ShooterSubsystem shooter, ViewSubsystem vision) {
-//         this.shooter = shooter;
-//         this.vision = vision;
-//     }
+    public ShooterManager(ShooterSubsystem shooter, ViewSubsystem vision) {
+        this.shooter = shooter;
+        this.vision = vision;
+    }
 
-//     public void enable() {
-//         if (state != ShooterState.DISABLED) {
-//             state = ShooterState.SPINNING;
-//         }
-//     }
+    // ================= TELEOP =================
 
-//     public void disable() {
-//         state = ShooterState.IDLE;
-//     }
+    public void toggleShooter() {
+        if (state == ShooterState.IDLE) {
+            state = ShooterState.SPINNING;
+        } else {
+            state = ShooterState.IDLE;
+        }
+    }
 
-//     public boolean isEnabled() {
-//         return state == ShooterState.SPINNING || state == ShooterState.AT_SPEED;
-//     }
+    // ================= AUTO =================
 
-//     public boolean isAtSpeed() {
-//         return state == ShooterState.AT_SPEED;
-//     }
+    public void enable() {
+        if (state != ShooterState.DISABLED) {
+            state = ShooterState.SPINNING;
+        }
+    }
 
-//     private double interpolateRPM(double distance) {
+    public void disable() {
+        state = ShooterState.IDLE;
+    }
 
-//         if (distance <= distances[0])
-//             return rpms[0];
+    public boolean isEnabled() {
+        return state == ShooterState.SPINNING || state == ShooterState.AT_SPEED;
+    }
 
-//         if (distance >= distances[distances.length - 1])
-//             return rpms[rpms.length - 1];
+    public boolean isAtSpeed() {
+        return state == ShooterState.AT_SPEED;
+    }
 
-//         for (int i = 0; i < distances.length - 1; i++) {
-//             if (distance >= distances[i] && distance <= distances[i + 1]) {
+    private double interpolateRPM(double distance) {
 
-//                 double t = (distance - distances[i]) /
-//                            (distances[i + 1] - distances[i]);
+        if (distance <= distances[0])
+            return rpms[0];
 
-//                 return MathUtil.interpolate(rpms[i], rpms[i + 1], t);
-//             }
-//         }
+        if (distance >= distances[distances.length - 1])
+            return rpms[rpms.length - 1];
 
-//         return 4000;
-//     }
+        for (int i = 0; i < distances.length - 1; i++) {
+            if (distance >= distances[i] && distance <= distances[i + 1]) {
 
-//     @Override
-// public void periodic() {
+                double t = (distance - distances[i]) /
+                           (distances[i + 1] - distances[i]);
 
-//     if (state == ShooterState.IDLE || state == ShooterState.DISABLED) {
-//         shooter.stop();
-//         return;
-//     }
+                return MathUtil.interpolate(rpms[i], rpms[i + 1], t);
+            }
+        }
 
-//     if (!vision.hasValidFrontTarget()) {
-//         shooter.stop();
-//         state = ShooterState.SPINNING;
-//         return;
-//     }
+        return 4000;
+    }
 
-//     double distance = vision.getDistanceToTag();
+    @Override
+    public void periodic() {
 
-//     if (distance != Double.MAX_VALUE) {
-//         lastValidDistance = distance;
-//     }
+        if (state == ShooterState.IDLE || state == ShooterState.DISABLED) {
+            shooter.stop();
+            return;
+        }
 
-//     double rpm = interpolateRPM(lastValidDistance);
+        double distance = vision.getBackDistanceToTag();
 
-//     shooter.setTargetRPM(rpm);
+        if (distance != Double.MAX_VALUE) {
+            lastValidDistance = distance;
+        }
 
-//     if (shooter.isAtSpeed()) {
-//         state = ShooterState.AT_SPEED;
-//     } else {
-//         state = ShooterState.SPINNING;
-//     }
+        double rpm = interpolateRPM(lastValidDistance);
 
-//     SmartDashboard.putString("Shooter/State", state.name());
-//     SmartDashboard.putNumber("Shooter/RPM", shooter.getCurrentRPM());
-//     SmartDashboard.putNumber("Shooter/TargetRPM", rpm);
-// }
+        shooter.setTargetRPM(rpm);
 
-// }
+        if (shooter.isAtSpeed()) {
+            state = ShooterState.AT_SPEED;
+        } else {
+            state = ShooterState.SPINNING;
+        }
+
+        SmartDashboard.putString("Shooter/State", state.name());
+        SmartDashboard.putNumber("Shooter/TargetRPM", rpm);
+        SmartDashboard.putNumber("Shooter/CurrentRPM", shooter.getCurrentRPM());
+    }
+}

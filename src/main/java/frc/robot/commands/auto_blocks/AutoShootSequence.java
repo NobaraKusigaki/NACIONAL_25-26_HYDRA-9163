@@ -30,7 +30,7 @@ public class AutoShootSequence extends SequentialCommandGroup {
 
     Commands.waitUntil(() ->
         preShooterManager.getState() ==
-        PreShooterManager.State.AUTO_FEEDING
+        PreShooterManager.PreShooterState.AUTO_FEEDING
     ).withTimeout(2.0),
 
     Commands.runOnce(
