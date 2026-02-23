@@ -21,19 +21,17 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
 import frc.robot.Constants;
 import frc.robot.Utils.DriveUtils.AntiTipController;
 import frc.robot.Utils.DriveUtils.SlewLimiter;
-import frc.robot.autonomous.Poses.FieldPoses;
-import frc.robot.commands.drive.PathfindToPose; 
+import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.Poses.FieldPoses;
+
 
 import java.io.File;
-import java.util.Set;
-
 import org.littletonrobotics.junction.Logger;
 
 import swervelib.*;

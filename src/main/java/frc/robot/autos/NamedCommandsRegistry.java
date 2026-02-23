@@ -13,7 +13,7 @@ import frc.robot.subsystems.Swervedrive.SwerveSubsystem;
 
 import frc.robot.commands.vision.AimAtTagCommand;
 import frc.robot.commands.vision.AimAtTagCommand.CameraSide;
-import frc.robot.autonomous.Poses.FieldPoses;
+import frc.robot.Poses.FieldPoses;
 import frc.robot.commands.auto_blocks.AutoGoAndAlign;
 import frc.robot.commands.auto_blocks.AutoShootSequence;
 

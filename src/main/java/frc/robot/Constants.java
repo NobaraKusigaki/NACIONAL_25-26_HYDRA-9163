@@ -108,3 +108,10 @@ public final class Constants {
   }
 
 }
+
+// 9 - intake roller BRUSHED
+//10 - angular intake BRUSHLESS
+// 11 -spindexer BRUSHED
+// 12 - pre shooter BRUSHED 
+// 13 - shooter BRUSHLESS
+// 14 e 15 climb BRUSHLESS
